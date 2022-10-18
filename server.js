@@ -3,8 +3,9 @@ const app = express();
 const { connectDB } = require("./config/database");
 const dotenv = require("dotenv");
 dotenv.config();
+const indexRouter = require("./routes/index");
 
-
+app.use("/", indexRouter);
 
 connectDB(() => {
     app.listen(process.env.PORT || 3000, ()=>{
