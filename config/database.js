@@ -8,7 +8,7 @@ function newFunction() {
 
 async function connectDB(cb) {
     try {
-        await mongoose.connect(process.env.MONGO_URL);
+        await mongoose.connect(process.env.MONGO_URI);
         console.log('Database connected succesfully');
         cb();
     } catch (error) {
