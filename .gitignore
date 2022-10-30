@@ -105,3 +105,9 @@ dist
 
 # Rest client
 .rest
+
+# File uploads
+public
+
+#views
+views
