@@ -7,10 +7,7 @@ const indexRouter = require("./routes/index");
 const authRouter = require("./routes/auth");
 const productRouter = require("./routes/product");
 const cors = require("cors");
-// const ejs = require("ejs");
 
-// app.set("view engine", "ejs")
-// app.set("views", __dirname + "/views");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

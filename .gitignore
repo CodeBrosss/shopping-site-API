@@ -109,5 +109,5 @@ dist
 # File uploads
 public
 
-#views
-views
+# Test Images
+testImages

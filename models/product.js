@@ -1,4 +1,3 @@
-const { object } = require("joi");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
@@ -23,7 +22,9 @@ const productSchema = new Schema({
         default: 0
     },
     productImage: {
-        type: Buffer,
+        storagePath: { type: String },
+        data: Buffer,
+        contentType: String
     }
 })
  
