@@ -6,6 +6,7 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const fs = require("node:fs");
 const path = require("path");
+const { uploadFile } = require('./google.upload');
 
 
 // upload new product
@@ -31,6 +32,10 @@ exports.createProduct = catchAsync(async(req, res, next) => {
     }
 
     try {
+        // upload file to google drive
+        const file = req.file;
+        await uploadFile(file);
+
         // save new product req to db
         const newProduct = await Product.create({
             title: req.body.title,
@@ -125,3 +130,18 @@ exports.editProduct = catchAsync(async (req, res) => {
         })
     }
 })
+  
+//   uploadRouter.post('/upload', upload.any(), async (req, res) => {
+//     try {
+//       const { body, files } = req;
+  
+//       for (let f = 0; f < files.length; f += 1) {
+//         await uploadFile(files[f]);
+//       }
+  
+//       console.log(body);
+//       res.status(200).send('Form Submitted');
+//     } catch (f) {
+//       res.send(f.message);
+//     }
+//   });

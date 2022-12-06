@@ -4,7 +4,7 @@ const {
     createProduct,
     fetchAllProducts,
     fetchProduct,
-    editProduct
+    editProduct,
 } = require("../controllers/product.controller");
 const path = require("path");
 const Product = require("../models/product");
