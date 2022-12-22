@@ -83,7 +83,7 @@ exports.signIn = async(req, res) => {
         user.accessToken = accessToken;
 
         res.status(200).json({
-            message: "Login successful"
+            message: "Login successful",
         })
     } catch (error) {
         res.status(500).json({
