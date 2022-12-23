@@ -2,6 +2,8 @@ const Joi = require("joi");
 
 function validateSignUp(user) {
 	const Schema = Joi.object().keys({
+		firstName: Joi.string().required(),
+		lastName: Joi.string().required(),
 		email: Joi.string().email().required(),
 		password: Joi.string().min(7).required(),
 		role: Joi.string().valid("basic", "admin").optional(),

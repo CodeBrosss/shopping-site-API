@@ -5,7 +5,9 @@ const {
     fetchAllProducts,
     fetchProduct,
     editProduct,
+    deleteProduct,
 } = require("../controllers/product.controller");
+const { authenticateToken } = require("../controllers/auth.controller")
 const path = require("path");
 const Product = require("../models/product");
 const uploadPath = path.join('public', Product.productImageBasePath)
@@ -21,6 +23,7 @@ const upload = multer({
 
 router.route("/upload") 
     .post(
+    authenticateToken,
     upload.single('picture'),
     createProduct
     );
@@ -31,5 +34,6 @@ router.route("/:id/edit").put(
     upload.single('picture'),
     editProduct
     );
+router.route("/:id/delete").delete(deleteProduct)    
 
 module.exports = router;

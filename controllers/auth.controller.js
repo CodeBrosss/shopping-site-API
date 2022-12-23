@@ -38,6 +38,8 @@ exports.signUp = catchAsync(async (req, res, next) => {
  
    // create a new user
    const newUser = await User.create({
+       firstName: req.body.firstName,
+       lastName: req.body.lastName,
        email: req.body.email,
        password: hashedPassword,
        role: req.body.role,
@@ -56,7 +58,6 @@ exports.signIn = async(req, res) => {
     // validate user body request
     const { error } = validateLogin(req.body);
     if (error) return next(new AppError(error.message, 400));
-     
     const { email, password } = req.body;
 
     const user = await User.findOne({ email })
@@ -65,7 +66,7 @@ exports.signIn = async(req, res) => {
             message: "User does not exist"
         })
     }
-
+     
     try {
         const correctPassword = await comparePassword(password, user.password)
         if(!correctPassword) {
@@ -73,21 +74,35 @@ exports.signIn = async(req, res) => {
                 message: "Incorrect email or password"
             })
         }
-
+          
+        //const user = { id: user.id }
         const accessToken = jwt.sign(
             { id: user.id },
             process.env.JWT_SECRET,
             { expiresIn: "1d" }
         )
-
-        user.accessToken = accessToken;
+         
+        //user.accessToken = accessToken;
 
         res.status(200).json({
             message: "Login successful",
+            accessToken: accessToken
         })
     } catch (error) {
         res.status(500).json({
             error: error
         })
     }
+}
+
+exports.authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    if (token == null) return res.sendStatus(401)
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403)
+        req.user = user
+        next()
+    })
 }

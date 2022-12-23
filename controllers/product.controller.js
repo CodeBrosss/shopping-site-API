@@ -90,11 +90,11 @@ exports.fetchProduct = catchAsync(async (req, res, next) => {
 });
 
 
-// update product
+// edit product
 exports.editProduct = catchAsync(async (req, res) => {
     const id = req.params.id;
     const oldProduct = await Product.findOne({ _id: id })
-    console.log(oldProduct.title);
+    
     try {
         let newProduct = await {
             title: req.body.title,
@@ -130,18 +130,28 @@ exports.editProduct = catchAsync(async (req, res) => {
         })
     }
 })
-  
-//   uploadRouter.post('/upload', upload.any(), async (req, res) => {
-//     try {
-//       const { body, files } = req;
-  
-//       for (let f = 0; f < files.length; f += 1) {
-//         await uploadFile(files[f]);
-//       }
-  
-//       console.log(body);
-//       res.status(200).send('Form Submitted');
-//     } catch (f) {
-//       res.send(f.message);
-//     }
-//   });
+
+// delete product
+exports.deleteProduct = catchAsync(async(req, res) => {
+    try {
+        // delete product image from server
+        const product = await Product.findOne({ _id: req.params.id })
+        const imagePath =  product.productImage.storagePath;
+        fs.unlinkSync(path.join(imagePath));
+         
+        // delete from db
+        const deleted = await Product.deleteOne({ _id: req.params.id })
+        if (!deleted) res.status(400).json({
+            message: "Failed to delete product"
+        })
+
+        res.status(200).json({
+            message: "Product deleted successfully",
+            deleted,
+        })
+    } catch (error) {
+        res.status(500).json({
+            error: error
+        })
+    }
+})
