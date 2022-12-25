@@ -102,3 +102,15 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Rest client
+.rest
+
+# File uploads
+public
+
+# Test Images
+testImages
+
+# api key
+API-key
