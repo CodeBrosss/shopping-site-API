@@ -9,9 +9,7 @@ An API for an e-commerce website.
 - This API is created using the Node JS backend language and Express JS framework.
 - It uses a MongoDB database.
 - Multer npm package is used in uploading image files to the server.
-
-## Functionality
-- This API is able to authenticate and authorize an admin and users.
+ 
 ### Users are able to:
 - Sign up or create accounts then sign in.
 - Get list of available products for sale and their details.
