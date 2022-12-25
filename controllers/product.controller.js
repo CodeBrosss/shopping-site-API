@@ -26,7 +26,7 @@ exports.createProduct = catchAsync(async(req, res, next) => {
     const { title } = req.body;
     const isCreatedAlready = await Product.findOne({ title });
     if (isCreatedAlready) {
-        res.status(403).json({
+        res.status(400).json({
             message: "Product with this title already exists"
         })
     }
@@ -44,21 +44,21 @@ exports.createProduct = catchAsync(async(req, res, next) => {
             productImage: {
                 storagePath: path.join('public', "/uploads/productImages/" + req.file.filename),
                 data: fs.readFileSync(path.join('public', "/uploads/productImages/" + req.file.filename)),
-                contentType: req.file.mimetype
+                contentType: req.file.mimetype,
             }
         })
          
-        res.status(200).json({
+        res.status(201).json({
             message: "Product created successfully",
-            productPath: newProduct.productImage.storagePath,
-            id: newProduct.id
+            imagePath: newProduct.productImage.storagePath,
+            productImageType: newProduct.productImage.contentType,
+            imageName: "picture",
         })
     } catch (error) {
         res.status(500).json({
             messaage: "Internal server error, could not create product",
             error: error
         })
-        console.log(error);
     }
 })
 
@@ -70,7 +70,7 @@ exports.fetchAllProducts = catchAsync(async(req, res) => {
     const products = await Product.find(filter);
     res.status(200).json({
         status: 'success',
-        message: 'Product fetched successfully',
+        message: 'Products fetched successfully',
     });
 })
 
@@ -105,7 +105,6 @@ exports.editProduct = catchAsync(async (req, res) => {
         if (req.file) {
             // delete old image
             const imagePath =  oldProduct.productImage.storagePath;
-             
             fs.unlinkSync(path.join(imagePath));
              
             newProduct.productImage = {
@@ -113,7 +112,6 @@ exports.editProduct = catchAsync(async (req, res) => {
                 data: fs.readFileSync(path.join('public', "/uploads/productImages/" + req.file.filename)),
                 contentType: req.file.mimetype
             }
-             
         }
     
         let update = await Product.findOneAndUpdate({ _id: id }, newProduct, { new: true });
@@ -123,8 +121,7 @@ exports.editProduct = catchAsync(async (req, res) => {
             update: update.productImage.storagePath
         })
     } catch (error) {
-        console.error(error);
-        res.status(400).json({
+        res.status(500).json({
             message: "Internal server error",
             error: error.message
         })
@@ -151,7 +148,8 @@ exports.deleteProduct = catchAsync(async(req, res) => {
         })
     } catch (error) {
         res.status(500).json({
-            error: error
+            message: "Internal server error",
+            error,
         })
     }
 })

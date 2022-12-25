@@ -12,6 +12,8 @@ const {
     validateSignUp,
     validateLogin,
 } = require('../validations/user.validation');
+const { roles } = require("../roles");
+require("dotenv").config();
 
 
 // signup funtion
@@ -35,21 +37,33 @@ exports.signUp = catchAsync(async (req, res, next) => {
 
    // hashPassword
    const hashedPassword = await hashPassword(req.body.password, 10);
- 
-   // create a new user
-   const newUser = await User.create({
-       firstName: req.body.firstName,
-       lastName: req.body.lastName,
-       email: req.body.email,
-       password: hashedPassword,
-       role: req.body.role,
-   });
+   
+   try {
+    // create a new user
+   const newUser = new User({
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    password: hashedPassword,
+    role: req.body.role || "basic",
+    });
+    const accessToken = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
+    expiresIn: "1h"
+    });
+    newUser.accessToken = accessToken;
+    await newUser.save();
 
-   return res.status(201).json({
-       status: 'success',
-       message: 'Registration successful',
-       user: newUser,
-   });
+    return res.status(201).json({
+        status: 'success',
+        message: 'Registration successful',
+        user: newUser,
+    });
+   } catch (error) {
+     res.status(500).json({
+        message: "Internal server error",
+        error,
+     })
+   }
 });
 
 
@@ -75,18 +89,16 @@ exports.signIn = async(req, res) => {
             })
         }
           
-        //const user = { id: user.id }
         const accessToken = jwt.sign(
-            { id: user.id },
+            { userId: user._id, userRole: user.role},
             process.env.JWT_SECRET,
-            { expiresIn: "1d" }
+            { expiresIn: "1h" }
         )
-         
-        //user.accessToken = accessToken;
+        await User.findByIdAndUpdate(user._id, { accessToken })
 
         res.status(200).json({
             message: "Login successful",
-            accessToken: accessToken
+            user,
         })
     } catch (error) {
         res.status(500).json({
@@ -95,14 +107,49 @@ exports.signIn = async(req, res) => {
     }
 }
 
-exports.authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
-    if (token == null) return res.sendStatus(401)
+exports.grantAccess = (action, resource) => {
+    return async (req, res, next) => {
+        try {
+            const permission = roles.can(req.user.role)[action](resource);
+            if (!permission.granted) {
+                return res.status(403).json({
+                    error: "You don't have enough permission to perform this action"
+                })
+            }
+            next()
+        } catch (error) {
+            next(error)
+        }
+    }
+}
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403)
-        req.user = user
+exports.checkIfLoggedIn = async(req, res, next) => {
+    try {
+        const user = res.locals.loggedInUser;
+        if (!user) return res.status(401).json({
+            error: "You need to log in to access this route"
+        })
+        req.user = user;
         next()
-    })
+    } catch (error) {
+        next(error)
+    }
+};
+
+exports.getHeaderToken = async(req, res, next) => {
+    if (req.headers['authorization']) {
+        const accessToken = req.headers['authorization'].split(' ')[1];
+        const { userId, exp } = await jwt.verify(accessToken, process.env.JWT_SECRET);
+
+        // check if token has expired
+        if (exp < Date.now().valueOf() / 1000) {
+            return res.status(401).json({
+                error: "JWT token has expired, please login to obtain a new one"
+            })
+        }
+        res.locals.loggedInUser = await User.findById(userId);
+        next();
+    } else {
+        next();
+    }
 }
