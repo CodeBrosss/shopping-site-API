@@ -1,5 +1,5 @@
 # shopping-site-API
-An API for Crochet products shopping site.
+An API for an e-commerce website.
 
 - Clone the repo.
 - input environment variables for `MONGO_URI`, `PORT`, `JWT_SECRET`, `REFRESH_TOKEN`.
