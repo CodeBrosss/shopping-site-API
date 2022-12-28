@@ -6,7 +6,8 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const fs = require("node:fs");
 const path = require("path");
-const { uploadFile } = require('./google.upload');
+//const { uploadFile } = require('./google.upload');
+const Favourite = require("../models/favourite");
 
 
 // upload new product
@@ -33,8 +34,7 @@ exports.createProduct = catchAsync(async(req, res, next) => {
 
     try {
         // upload file to google drive
-        const file = req.file;
-        await uploadFile(file);
+        //await uploadFile(req.file);
 
         // save new product req to db
         const newProduct = await Product.create({
@@ -53,6 +53,7 @@ exports.createProduct = catchAsync(async(req, res, next) => {
             imagePath: newProduct.productImage.storagePath,
             productImageType: newProduct.productImage.contentType,
             imageName: "picture",
+            id: newProduct._id,
         })
     } catch (error) {
         res.status(500).json({
@@ -145,6 +146,60 @@ exports.deleteProduct = catchAsync(async(req, res) => {
         res.status(200).json({
             message: "Product deleted successfully",
             deleted,
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error,
+        })
+    }
+});
+
+exports.addFavourite = catchAsync(async(req, res) => {
+    const product = await Product.findOne({ _id: req.params.productId});
+    if (!product)
+        return next(
+            new AppError('Product not found or does not exist', 404)
+        );
+    const favourite = await Favourite.create({
+        user: req.user._id,
+        product: product._id,
+    });
+    res.status(200).json({
+        status: 'success',
+        message: 'Favourite saved successfully',
+        favourite,
+    });
+});
+
+exports.fetchFavourites = catchAsync(async (req, res, next) => {
+    try {
+        const filter = { user: req.user._id }
+         
+        const favourites = await Favourite.find(filter);
+        res.status(200).json({
+            status: 'success',
+            message: 'Favourites fetched successfully',
+            favourites,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error,
+        })
+    }
+});
+
+exports.removeFavourite = catchAsync(async (req, res, next) => {
+    try {
+        const removed = await Favourite.deleteOne({ _id: req.params.favouriteId });
+        if (!removed) res.status(400).json({
+            message: "Failed to remove favourite"
+        })
+
+        res.status(200).json({
+            message: "Favourite removed successfully",
+            removed,
         })
     } catch (error) {
         res.status(500).json({

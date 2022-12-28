@@ -6,6 +6,7 @@ const {
     fetchProduct,
     editProduct,
     deleteProduct,
+    addFavourite
 } = require("../controllers/product.controller");
 const {
     checkIfLoggedIn,
@@ -32,11 +33,18 @@ router.route("/upload")
     grantAccess("createOwn", "product"),
     upload.single('picture'),
     createProduct,
-    );
+);
 
 router.route("/").get(fetchAllProducts);
 
 router.route("/:id").get(fetchProduct);
+
+router.route("/:productId/favourites").post(
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess("createOwn", "favourite"),
+    addFavourite
+); 
 
 router.route("/:id/edit").put(
     getHeaderToken,
@@ -44,14 +52,13 @@ router.route("/:id/edit").put(
     grantAccess("updateAny", "product"),
     upload.single('picture'),
     editProduct
-    );
+);
     
-router.route("/:id/delete")
-    .delete(
-        getHeaderToken,
-        checkIfLoggedIn,
-        grantAccess("deleteAny", "product"),
-        deleteProduct,
-    )    
+router.route("/:id/delete").delete(
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess("deleteAny", "product"),
+    deleteProduct,
+);    
 
 module.exports = router;
