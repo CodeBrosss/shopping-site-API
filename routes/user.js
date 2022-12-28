@@ -9,7 +9,6 @@ const {
 
 const { 
     fetchFavourites,
-    removeFavourite 
 } = require("../controllers/product.controller");
 
 
@@ -19,12 +18,5 @@ router.route("/:userId/favourites").get(
     grantAccess("readOwn", "favourite"),
     fetchFavourites
 );    
-
-router.route("/:userId/favourites/:favouriteId").delete(
-    getHeaderToken,
-    checkIfLoggedIn,
-    grantAccess("deleteOwn", "favourite"),
-    removeFavourite
-)
 
 module.exports = router;

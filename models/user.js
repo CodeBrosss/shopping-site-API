@@ -24,10 +24,10 @@ const userSchema = new Schema({
         default: "basic",
         enum: ["admin", "basic"]
     },
-    favourites: {
+    favourites: [{
         type: Schema.Types.ObjectId,
         ref: "favourite"
-    },
+    }],
     accessToken: {
         type: String
     }

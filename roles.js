@@ -7,6 +7,7 @@ ac.grant("basic")
  .createOwn("favourite")
  .readOwn("favourite")
  .deleteOwn("favourite")
+ .createOwn("like")
 
 ac.grant("admin")
  .extend("basic")
