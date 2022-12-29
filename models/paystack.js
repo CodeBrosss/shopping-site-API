@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const paystackSchema = new Schema({
-    fullName: {
+    full_name: {
         type: String,
         required: true,
     },
