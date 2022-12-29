@@ -6,7 +6,10 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const fs = require("node:fs");
 const path = require("path");
-const { uploadFile } = require('./google.upload');
+//const { uploadFile } = require('./google.upload');
+const Favourite = require("../models/favourite");
+const ProductLike = require("../models/likes");
+const User = require("../models/user");
 
 
 // upload new product
@@ -33,8 +36,7 @@ exports.createProduct = catchAsync(async(req, res, next) => {
 
     try {
         // upload file to google drive
-        const file = req.file;
-        await uploadFile(file);
+        //await uploadFile(req.file);
 
         // save new product req to db
         const newProduct = await Product.create({
@@ -53,6 +55,7 @@ exports.createProduct = catchAsync(async(req, res, next) => {
             imagePath: newProduct.productImage.storagePath,
             productImageType: newProduct.productImage.contentType,
             imageName: "picture",
+            id: newProduct._id,
         })
     } catch (error) {
         res.status(500).json({
@@ -152,4 +155,121 @@ exports.deleteProduct = catchAsync(async(req, res) => {
             error,
         })
     }
-})
+});
+
+exports.toggleFavourite = catchAsync(async(req, res) => {
+    try {
+        const product = await Product.findOne({ _id: req.params.productId});
+        if (!product)
+            return next(
+                new AppError('Product not found or does not exist', 404)
+        );
+
+        const favouriteExists = await Favourite.findOne({
+            user: req.user._id,
+            product: product.id
+        })
+
+        if (!favouriteExists) {
+            const favourite = await Favourite.create({
+                user: req.user._id,
+                product: product._id,
+            });
+    
+            await User.updateOne(
+                { _id: req.user._id }, 
+                { $push: {favourites: favourite} }
+            )
+    
+            res.status(200).json({
+                status: 'success',
+                message: 'Favourite saved successfully',
+                favourite,
+            });
+        } else {
+            await Favourite.deleteOne({
+                _id: favouriteExists._id
+            })
+
+            await User.updateOne(
+                { _id: req.user._id }, 
+                { $pull: {favourites: favouriteExists._id} }
+            )
+    
+            res.status(200).json({ 
+                message: "Favourite removed successfully" 
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error,
+        })
+    }
+});
+
+exports.fetchFavourites = catchAsync(async (req, res, next) => {
+    try {
+        const filter = { user: req.user._id }
+         
+        const favourites = await Favourite.find(filter);
+        res.status(200).json({
+            status: 'success',
+            message: 'Favourites fetched successfully',
+            favourites,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error,
+        })
+    }
+});
+
+exports.toggleLike = catchAsync(async (req, res, next) => {
+    let productId = req.params.productId;
+    const product = await Product.findOne({ _id: productId });
+    if (!product) return next(new AppError(
+        "No product found", 400
+    ))
+
+    const currentUser = req.user;
+
+    const currentUserLike = await ProductLike.findOne({
+        product: productId,
+        user: currentUser._id
+    })
+    try {
+        if (!currentUserLike) {
+            const likeData = await ProductLike.create({
+                product: productId,
+                user: currentUser._id
+            })
+            await Product.updateOne(
+                { _id: productId }, 
+                { $push: {likes: likeData._id} }
+            )
+            res.status(200).json({ 
+                message: "Liked successfully" 
+            })
+        } else {
+            await ProductLike.deleteOne({ 
+                _id: currentUserLike._id 
+            })
+    
+            await Product.updateOne(
+                { _id: productId }, 
+                { $pull: {likes: currentUserLike._id} }
+            )
+    
+            res.status(200).json({ 
+                message: "You unliked this product" 
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error,
+        })
+    }
+});

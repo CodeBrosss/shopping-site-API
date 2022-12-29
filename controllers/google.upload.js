@@ -31,14 +31,3 @@ const getDriveService = () => {
     });
     console.log(`Uploaded file ${data.name} ${data.id}`);
   };
-
-  
-  // const scanFolderForFiles = async (folderPath) => {
-  //   const folder = await fs.promises.opendir(folderPath);
-  //   for await (const dirent of folder) {
-  //     if (dirent.isFile() && dirent.name.endsWith('.pdf')) {
-  //       await uploadSingleFile(dirent.name, path.join(folderPath, dirent.name));
-  //       await fs.promises.rm(filePath);
-  //     }
-  //   }
-  // };

@@ -16,16 +16,33 @@ const { roles } = require("../roles");
 require("dotenv").config();
 
 
+// get all users
+exports.fetchAllUsers = catchAsync(async (req, res, next) => {
+    const filter = { role: "basic" }
+    const users = await User.find(filter);
+
+    if (!users) return next(new AppError(
+        "No users found", 400
+    ))
+
+    res.status(200).json({
+        status: "success",
+        message: "Users fetched successfully",
+    })
+})
+
 // signup funtion
 exports.signUp = catchAsync(async (req, res, next) => {
+     
    // validate user body request
    const { error } = validateSignUp(req.body);
    if (error) return next(new AppError(error.message, 400));
-
+    
    // check if user exists
    const existingUser = await User.findOne({
        email: req.body.email,
    });
+
    if (existingUser) {
        return next(
            new AppError(
@@ -33,26 +50,28 @@ exports.signUp = catchAsync(async (req, res, next) => {
                400
            )
        );
-   }
+   };
 
    // hashPassword
    const hashedPassword = await hashPassword(req.body.password, 10);
-   
+    
    try {
     // create a new user
    const newUser = new User({
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    email: req.body.email,
-    password: hashedPassword,
-    role: req.body.role || "basic",
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
+        password: hashedPassword,
+        role: req.body.role || "basic",
     });
-    const accessToken = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
-    expiresIn: "1h"
+    const accessToken = jwt.sign({ 
+        userId: newUser._id }, 
+        process.env.JWT_SECRET, {
+        expiresIn: "1h"
     });
     newUser.accessToken = accessToken;
     await newUser.save();
-
+     
     return res.status(201).json({
         status: 'success',
         message: 'Registration successful',
@@ -113,7 +132,7 @@ exports.grantAccess = (action, resource) => {
             const permission = roles.can(req.user.role)[action](resource);
             if (!permission.granted) {
                 return res.status(403).json({
-                    error: "You don't have enough permission to perform this action"
+                    error: "You don't have enough permissions to perform this action"
                 })
             }
             next()
@@ -137,19 +156,27 @@ exports.checkIfLoggedIn = async(req, res, next) => {
 };
 
 exports.getHeaderToken = async(req, res, next) => {
-    if (req.headers['authorization']) {
-        const accessToken = req.headers['authorization'].split(' ')[1];
-        const { userId, exp } = await jwt.verify(accessToken, process.env.JWT_SECRET);
-
-        // check if token has expired
-        if (exp < Date.now().valueOf() / 1000) {
-            return res.status(401).json({
-                error: "JWT token has expired, please login to obtain a new one"
+    try {
+        if (req.headers['authorization']) {
+            const accessToken = req.headers['authorization'].split(' ')[1];
+            const { userId } = await jwt.verify(accessToken, process.env.JWT_SECRET)
+    
+            res.locals.loggedInUser = await User.findById(userId);
+            next();
+        } else {
+            next();
+        }
+    } catch (error) {
+        if (error.name == "TokenExpiredError") {
+            res.status(401).json({
+                message: "Token expired, login to get new token",
+                error,
+            })
+        } else {
+            res.status(500).json({
+                message: "Internal server error",
+                error,
             })
         }
-        res.locals.loggedInUser = await User.findById(userId);
-        next();
-    } else {
-        next();
     }
-}
+};

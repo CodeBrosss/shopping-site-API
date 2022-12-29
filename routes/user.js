@@ -1,24 +1,22 @@
 const express = require("express");
 const router = express.Router();
-const { 
-    signUp, 
-    signIn,
-    fetchAllUsers,
+
+const {
     getHeaderToken,
     checkIfLoggedIn,
     grantAccess
 } = require("../controllers/auth.controller");
 
+const { 
+    fetchFavourites,
+} = require("../controllers/product.controller");
 
-router.route("/").get(
+
+router.route("/:userId/favourites").get(
     getHeaderToken,
     checkIfLoggedIn,
-    grantAccess("readAny", "user"),
-    fetchAllUsers
-);
-
-
-router.route("/signup").post(signUp);
-router.route("/signin").post(signIn);
+    grantAccess("readOwn", "favourite"),
+    fetchFavourites
+);    
 
 module.exports = router;

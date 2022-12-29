@@ -6,6 +6,7 @@ dotenv.config();
 const indexRouter = require("./routes/index");
 const authRouter = require("./routes/auth");
 const productRouter = require("./routes/product");
+const userRouter = require("./routes/user");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { JWT } = require("google-auth-library");
@@ -17,6 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors());
 
 app.use("/api/v1/", indexRouter);
+app.use("/api/v1/users", userRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/products", productRouter);
 

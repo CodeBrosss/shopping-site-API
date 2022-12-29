@@ -17,10 +17,10 @@ const productSchema = new Schema({
         type: Number,
         required: true
     },
-    likes: {
-        type: Number,
-        default: 0
-    },
+    likes: [{
+        type: Schema.Types.ObjectId,
+        ref: "ProductLike"
+    }],
     productImage: {
         storagePath: { type: String },
         data: Buffer,
