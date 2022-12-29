@@ -62,7 +62,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
         lastName: req.body.lastName,
         email: req.body.email,
         password: hashedPassword,
-        role: req.body.role || "basic",
+        role: "basic",
     });
     const accessToken = jwt.sign({ 
         userId: newUser._id }, 
@@ -84,6 +84,59 @@ exports.signUp = catchAsync(async (req, res, next) => {
      })
    }
 });
+
+exports.adminSignup = catchAsync(async (req, res, next) => {
+     
+    // validate user body request
+    const { error } = validateSignUp(req.body);
+    if (error) return next(new AppError(error.message, 400));
+     
+    // check if user exists
+    const existingUser = await User.findOne({
+        email: req.body.email,
+    });
+ 
+    if (existingUser) {
+        return next(
+            new AppError(
+                'Admin already exist, please use the login route.',
+                400
+            )
+        );
+    };
+ 
+    // hashPassword
+    const hashedPassword = await hashPassword(req.body.password, 10);
+     
+    try {
+     // create a new user
+    const newUser = new User({
+         firstName: req.body.firstName,
+         lastName: req.body.lastName,
+         email: req.body.email,
+         password: hashedPassword,
+         role: "admin",
+     });
+     const accessToken = jwt.sign({ 
+         userId: newUser._id, userRole: newUser.role}, 
+         process.env.JWT_SECRET, {
+         expiresIn: "1h"
+     });
+     newUser.accessToken = accessToken;
+     await newUser.save();
+      
+     return res.status(201).json({
+         status: 'success',
+         message: 'Registration successful',
+         user: newUser,
+     });
+    } catch (error) {
+      res.status(500).json({
+         message: "Internal server error",
+         error,
+      })
+    }
+ });
 
 
 // signin function

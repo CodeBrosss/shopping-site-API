@@ -54,7 +54,7 @@ exports.createProduct = catchAsync(async(req, res, next) => {
             message: "Product created successfully",
             imagePath: newProduct.productImage.storagePath,
             productImageType: newProduct.productImage.contentType,
-            imageName: "picture",
+            name: "picture",
             id: newProduct._id,
         })
     } catch (error) {
