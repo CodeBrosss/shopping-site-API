@@ -6,7 +6,7 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const fs = require("node:fs");
 const path = require("path");
-//const { uploadFile } = require('./google.upload');
+//const { uploadFile } = require('../config/googleDrive');
 const Favourite = require("../models/favourite");
 const ProductLike = require("../models/likes");
 const User = require("../models/user");
@@ -54,7 +54,7 @@ exports.createProduct = catchAsync(async(req, res, next) => {
             message: "Product created successfully",
             imagePath: newProduct.productImage.storagePath,
             productImageType: newProduct.productImage.contentType,
-            imageName: "picture",
+            name: "picture",
             id: newProduct._id,
         })
     } catch (error) {
