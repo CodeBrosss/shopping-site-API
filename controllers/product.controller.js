@@ -74,6 +74,7 @@ exports.fetchAllProducts = catchAsync(async(req, res) => {
     res.status(200).json({
         status: 'success',
         message: 'Products fetched successfully',
+        products,
     });
 })
 
@@ -88,7 +89,7 @@ exports.fetchProduct = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         message: 'Product fetched successfully',
-        product: product.title
+        product,
     });
 });
 
