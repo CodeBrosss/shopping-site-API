@@ -1,6 +1,6 @@
 # shopping-site-API
 An API for an e-commerce website.
-Heres the (API Documentation)[https://documenter.getpostman.com/view/21602276/2s8Z6yYZ4B]
+Heres the [API Documentation](https://documenter.getpostman.com/view/21602276/2s8Z6yYZ4B)
 
 - Clone the repo.
 - input environment variables for `MONGO_URI`, `PORT`, `JWT_SECRET`, `REFRESH_TOKEN`.
