@@ -4,7 +4,7 @@ const {
 } = require("../validations/product.validation");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const fs = require("node:fs");
+const fs = require("fs");
 const path = require("path");
 //const { uploadFile } = require('../config/googleDrive');
 const Favourite = require("../models/favourite");
