@@ -14,6 +14,8 @@ const {
 } = require('../validations/user.validation');
 const { roles } = require("../roles");
 require("dotenv").config();
+const path = require("path");
+const fs = require("fs");
 
 
 // get all users
@@ -116,24 +118,34 @@ exports.adminSignup = catchAsync(async (req, res, next) => {
          email: req.body.email,
          password: hashedPassword,
          role: "admin",
+         photo: {
+            storagePath: path.join('public', User.adminPhotoBasePath +  '/' + req.file.filename),
+            data: fs.readFileSync(path.join('public', User.adminPhotoBasePath + '/' + req.file.filename)),
+            contentType: req.file.mimetype,
+        }
      });
+      
      const accessToken = jwt.sign({ 
          userId: newUser._id, userRole: newUser.role}, 
          process.env.JWT_SECRET, {
          expiresIn: "1h"
      });
+      
      newUser.accessToken = accessToken;
      await newUser.save();
       
      return res.status(201).json({
          status: 'success',
          message: 'Registration successful',
-         user: newUser,
+         id: newUser._id,
+         storagePath: newUser.photo.storagePath,
+         contentType: newUser.photo.contentType,
+         name: "picture",
      });
     } catch (error) {
       res.status(500).json({
          message: "Internal server error",
-         error,
+         error: error
       })
     }
  });
