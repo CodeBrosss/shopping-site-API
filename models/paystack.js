@@ -2,8 +2,13 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const paystackSchema = new Schema({
-    full_name: {
+    reference: {
         type: String,
+        required: true,
+        unique: true
+    },
+    amount: {
+        type: Number,
         required: true,
     },
     email: {
@@ -11,13 +16,13 @@ const paystackSchema = new Schema({
         required: true,
         unique: true,
     },
-    amount: {
-        type: Number,
+    fullName: {
+        type: String,
         required: true,
     },
-    reference: {
-        type: String,
-        required: true
+    productId: {
+        type: Schema.Types.ObjectId,
+        ref: "Product"
     }
 })
 
