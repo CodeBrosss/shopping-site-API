@@ -8,7 +8,7 @@ const {
     comparePassword 
 } = require("../utils/bcrypt");
 const AppError = require("../utils/appError");
-const catchAsync = require('../utils/catchAsync');
+// const catchAsync = require('../utils/catchAsync').default.default;
 const {
     validateSignUp,
     validateLogin,
@@ -18,9 +18,10 @@ require("dotenv").config();
 const path = require("path");
 const fs = require("fs");
 
+const asyncWrapper = require('../utils/catchAsync');
 
 // get all users
-exports.fetchAllUsers = catchAsync(async (req, res, next) => {
+exports.fetchAllUsers = asyncWrapper(async (req, res, next) => {
     const filter = { role: "basic" }
     const users = await User.find(filter);
 
@@ -32,10 +33,10 @@ exports.fetchAllUsers = catchAsync(async (req, res, next) => {
         status: "success",
         message: "Users fetched successfully",
     })
-})
+});
 
 // signup funtion
-exports.signUp = catchAsync(async (req, res, next) => {
+exports.signUp = asyncWrapper(async (req, res, next) => {
      
    // validate user body request
    const { error } = validateSignUp(req.body);
@@ -58,7 +59,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
    // hashPassword
    const hashedPassword = await hashPassword(req.body.password, 10);
     
-   try {
+   
     // create a new user
    const newUser = new User({
         firstName: req.body.firstName,
@@ -79,15 +80,9 @@ exports.signUp = catchAsync(async (req, res, next) => {
         message: 'Registration successful',
         user: newUser,
     });
-   } catch (error) {
-     res.status(500).json({
-        message: "Internal server error",
-        error,
-     })
-   }
 });
 
-exports.adminSignup = catchAsync(async (req, res, next) => {
+exports.adminSignup = asyncWrapper(async (req, res, next) => {
      
     // validate user body request
     const { error } = validateSignUp(req.body);
@@ -150,7 +145,7 @@ exports.adminSignup = catchAsync(async (req, res, next) => {
  });
 
 // signin function
-exports.signIn = async(req, res) => {
+exports.signIn = asyncWrapper(async(req, res) => {
     // validate user body request
     const { error } = validateLogin(req.body);
     if (error) return next(new AppError(error.message, 400));
@@ -163,31 +158,26 @@ exports.signIn = async(req, res) => {
         })
     }
      
-    try {
-        const correctPassword = await comparePassword(password, user.password)
-        if(!correctPassword) {
-            return res.status(400).json({
-                message: "Incorrect email or password"
+    
+    const correctPassword = await comparePassword(password, user.password)
+    if(!correctPassword) {
+        return res.status(400).json({
+            message: "Incorrect email or password"
             })
-        }
-          
-        const accessToken = jwt.sign(
-            { userId: user._id, userRole: user.role},
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" }
-        )
-        await User.findByIdAndUpdate(user._id, { accessToken })
-
-        res.status(200).json({
-            message: "Login successful",
-            user,
-        })
-    } catch (error) {
-        res.status(500).json({
-            error: error
-        })
     }
-}
+          
+    const accessToken = jwt.sign(
+        { userId: user._id, userRole: user.role},
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+    )
+    await User.findByIdAndUpdate(user._id, { accessToken })
+
+    res.status(200).json({
+        message: "Login successful",
+        user,
+    });
+});
 
 exports.adminSignIn = async(req, res) => {
     // validate user body request
@@ -244,18 +234,16 @@ exports.grantAccess = (action, resource) => {
     }
 }
 
-exports.checkIfLoggedIn = async(req, res, next) => {
-    try {
+exports.checkIfLoggedIn = asyncWrapper(async(req, res, next) => {
+    
         const user = res.locals.loggedInUser;
         if (!user) return res.status(401).json({
             error: "You need to log in to access this route"
         })
         req.user = user;
         next()
-    } catch (error) {
-        next(error)
-    }
-};
+    
+});
 
 exports.getHeaderToken = async(req, res, next) => {
     try {
