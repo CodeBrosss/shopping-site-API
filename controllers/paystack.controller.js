@@ -5,11 +5,13 @@ const {
     initializePayment, 
     verifyPayment
 } = require('../config/paystack')(request);
+const Admin = require("../models/admin");
 
 exports.makePayment = (req, res) => {
-    const form = _.pick(req.body,[`amount`,`email`,`full_name`]);
+    const form = _.pick(req.body, [`amount`,`email`,`fullName`, `productId`]);
     form.metadata = {
-        full_name : form.full_name
+        fullName : form.fullName,
+        productId: form.productId
     }
     form.amount *= 100;
     initializePayment(form, (error, body)=>{
@@ -36,24 +38,30 @@ exports.verifyPayment = (req,res) => {
             return 
         }
         response = JSON.parse(body);
-        const data = _.at(response.data, ['reference', 'amount','customer.email', 'metadata.full_name']); //store them in array using lodash
-        console.log(data)
+        const data = _.at(response.data, ['reference', 'amount','customer.email', 'metadata.fullName', 'metadata.productId']); //store them in array using lodash
         let reference = data[0];
-        [reference, amount, email, full_name] = data; // assign values of array to variables
-        const payment = {reference, amount, email, full_name} // make an object of the variables
-        Paystack.create(payment).then((payment)=>{
-            if(payment){
-                res.status(200).json({
-                    message: "Payment verified",
-                    payment: payment,
-                })
-            }
-        }).catch((e)=>{
-            res.status(400).json({
-                message: "Internal server error",
-                error: e
+        [reference, amount, email, fullName, productId] = data; // assign values of array to variables
+        const payment = {reference, amount, email, fullName, productId} // make an object of the variables
+        payment.amount /= 100; //convert from kobo to naira
+        savePayment(res, payment) 
+    })
+}
+
+function savePayment(res, payment) {
+    Paystack.create(payment).then((payment)=>{
+        Admin.updateOne(
+            { _id: process.env.ADMIN_ID }, 
+            { $push: {sales: payment} }
+        ).then(() => {
+            res.status(200).json({
+                message: "Payment verified",
+                payment: payment,
             })
         })
-         
+    }).catch((err)=>{
+        res.status(400).json({
+            message: "Internal server error",
+            error: err
+        })
     })
 }

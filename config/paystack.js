@@ -10,7 +10,7 @@ const paystack = (request) => {
                 authorization: MySecretKey,
                 'content-type': 'application/json',
                 'cache-control': 'no-cache'
-            },
+            }, 
         form
         }
         const callback = (error, response, body)=>{
