@@ -1,6 +1,7 @@
 "use strict";
 
 const User = require("../models/user");
+const Admin = require("../models/admin");
 const jwt = require('jsonwebtoken');
 const { 
     hashPassword, 
@@ -14,6 +15,8 @@ const {
 } = require('../validations/user.validation');
 const { roles } = require("../roles");
 require("dotenv").config();
+const path = require("path");
+const fs = require("fs");
 
 
 // get all users
@@ -62,7 +65,6 @@ exports.signUp = catchAsync(async (req, res, next) => {
         lastName: req.body.lastName,
         email: req.body.email,
         password: hashedPassword,
-        role: "basic",
     });
     const accessToken = jwt.sign({ 
         userId: newUser._id }, 
@@ -92,11 +94,11 @@ exports.adminSignup = catchAsync(async (req, res, next) => {
     if (error) return next(new AppError(error.message, 400));
      
     // check if user exists
-    const existingUser = await User.findOne({
+    const existingAdmin = await Admin.findOne({
         email: req.body.email,
     });
  
-    if (existingUser) {
+    if (existingAdmin) {
         return next(
             new AppError(
                 'Admin already exist, please use the login route.',
@@ -110,34 +112,42 @@ exports.adminSignup = catchAsync(async (req, res, next) => {
      
     try {
      // create a new user
-    const newUser = new User({
+    const newAdmin = new Admin({
          firstName: req.body.firstName,
          lastName: req.body.lastName,
          email: req.body.email,
          password: hashedPassword,
-         role: "admin",
+         photo: {
+            storagePath: path.join('public', Admin.adminPhotoBasePath +  '/' + req.file.filename),
+            data: fs.readFileSync(path.join('public', Admin.adminPhotoBasePath + '/' + req.file.filename)),
+            contentType: req.file.mimetype,
+        }
      });
+      
      const accessToken = jwt.sign({ 
-         userId: newUser._id, userRole: newUser.role}, 
+         userId: newAdmin._id, userRole: newAdmin.role}, 
          process.env.JWT_SECRET, {
          expiresIn: "1h"
      });
-     newUser.accessToken = accessToken;
-     await newUser.save();
+      
+     newAdmin.accessToken = accessToken;
+     await newAdmin.save();
       
      return res.status(201).json({
          status: 'success',
          message: 'Registration successful',
-         user: newUser,
+         id: newAdmin._id,
+         adminPhotoStoragePath: newAdmin.photo.storagePath,
+         contentType: newAdmin.photo.contentType,
+         name: "picture",
      });
     } catch (error) {
       res.status(500).json({
          message: "Internal server error",
-         error,
+         error: error
       })
     }
  });
-
 
 // signin function
 exports.signIn = async(req, res) => {
@@ -179,6 +189,45 @@ exports.signIn = async(req, res) => {
     }
 }
 
+exports.adminSignIn = async(req, res) => {
+    // validate user body request
+    const { error } = validateLogin(req.body);
+    if (error) return next(new AppError(error.message, 400));
+    const { email, password } = req.body;
+
+    const admin = await Admin.findOne({ email })
+    if (!admin) {
+        return res.status(404).json({
+            message: "Admin not found."
+        })
+    }
+     
+    try {
+        const correctPassword = await comparePassword(password, admin.password)
+        if(!correctPassword) {
+            return res.status(400).json({
+                message: "Incorrect email or password"
+            })
+        }
+          
+        const accessToken = jwt.sign(
+            { userId: admin._id, userRole: admin.role},
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        )
+        await Admin.findByIdAndUpdate(admin._id, { accessToken })
+
+        res.status(200).json({
+            message: "Administrator login successful",
+            accessToken: admin.accessToken
+        })
+    } catch (error) {
+        res.status(500).json({
+            error: error
+        })
+    }
+}
+
 exports.grantAccess = (action, resource) => {
     return async (req, res, next) => {
         try {
@@ -212,9 +261,13 @@ exports.getHeaderToken = async(req, res, next) => {
     try {
         if (req.headers['authorization']) {
             const accessToken = req.headers['authorization'].split(' ')[1];
-            const { userId } = await jwt.verify(accessToken, process.env.JWT_SECRET)
-    
-            res.locals.loggedInUser = await User.findById(userId);
+            const { userId, userRole } = await jwt.verify(accessToken, process.env.JWT_SECRET)
+            
+            if (userRole == "admin") {
+                res.locals.loggedInUser = await Admin.findById(userId);
+            } else {
+                res.locals.loggedInUser = await User.findById(userId);
+            }
             next();
         } else {
             next();

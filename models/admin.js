@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const userSchema = new Schema({
+const adminPhotoBasePath = "uploads/adminPhoto";
+
+const adminSchema = new Schema({
     firstName: {
         type: String,
         required: true,
@@ -21,7 +23,7 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
-        default: "basic",
+        default: "admin"
     },
     favourites: [{
         type: Schema.Types.ObjectId,
@@ -32,10 +34,15 @@ const userSchema = new Schema({
         data: Buffer,
         contentType: String
     },
+    sales: [{
+        type: Schema.Types.ObjectId,
+        ref: "Paystack"
+    }],
     accessToken: {
         type: String
     }
 })
 
-const User = mongoose.model("User", userSchema);
-module.exports = User;
+const Admin = mongoose.model("Admin", adminSchema);
+module.exports = Admin;
+module.exports.adminPhotoBasePath = adminPhotoBasePath;
