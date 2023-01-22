@@ -12,6 +12,8 @@ const AppError = require("../utils/appError");
 const {
     validateSignUp,
     validateLogin,
+    validateUserEdit,
+    validatePasswordChange,
 } = require('../validations/user.validation');
 const { roles } = require("../roles");
 require("dotenv").config();
@@ -218,9 +220,12 @@ exports.adminSignIn = async(req, res) => {
     }
 }
 
-exports.editUser = asyncWrapper(async (req, res) => {
+exports.editUser = asyncWrapper(async (req, res, next) => {
+    const { error } = validateUserEdit(req.body);
+    if (error) return next(new AppError(error.message, 400));
+
     const id = req.params.userId;
-    
+
     let newUser = await {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
@@ -235,6 +240,63 @@ exports.editUser = asyncWrapper(async (req, res) => {
     });
     
 });
+
+exports.changeUserPassword = asyncWrapper(async (req, res, next) => {
+    // validate req body
+    const { error } = validatePasswordChange(req.body);
+    if (error) return next(new AppError(error.message, 400))
+     
+    const { oldPassword, newPassword } = req.body;
+    const id = req.params.userId;
+    const user = await User.findOne({ _id: id })
+     
+    const correctPassword = await comparePassword(oldPassword, user.password);
+    if (!correctPassword) {
+        res.status(400).json({
+            message: "Old password is incorrect"
+        })
+    }
+     
+    const newHashedPassword = await hashPassword(newPassword, 10);
+    const passwordUpdate = await {
+        password: newHashedPassword
+    }
+     
+    const update = await User.findOneAndUpdate({_id: id}, passwordUpdate, {new: true});
+     
+    res.status(200).json({
+        message: "Password changed successfully",
+        update,
+    })
+})  
+
+exports.changeAdminPassword = asyncWrapper(async (req, res, next) => {
+    // validate req body
+    const { error } = validatePasswordChange(req.body);
+    if (error) return next(new AppError(error.message, 400))
+     
+    const { oldPassword, newPassword } = req.body;
+    const id = req.user;
+    const admin = await Admin.findOne({ _id: id })
+     
+    const correctPassword = await comparePassword(oldPassword, admin.password);
+    if (!correctPassword) {
+        res.status(400).json({
+            message: "Old password is incorrect"
+        })
+    }
+     
+    const newHashedPassword = await hashPassword(newPassword, 10);
+    const passwordUpdate = await {
+        password: newHashedPassword
+    }
+     
+    const update = await Admin.findOneAndUpdate({_id: id}, passwordUpdate, {new: true});
+     
+    res.status(200).json({
+        message: "Administrator password changed successfully",
+    })
+})
 
 exports.grantAccess = (action, resource) => {
     return async (req, res, next) => {

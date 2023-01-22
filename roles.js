@@ -9,6 +9,7 @@ ac.grant("basic")
  .deleteOwn("favourite")
  .createOwn("like")
  .updateOwn("user")
+ .updateOwn("password")
 
 ac.grant("admin")
  .extend("basic")
