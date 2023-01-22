@@ -13,6 +13,7 @@ Heres the [API Documentation](https://documenter.getpostman.com/view/21602276/2s
  
 ### Users are able to:
 - Sign up or create accounts then sign in.
+- Edit their information.
 - Get list of available products for sale and their details.
 - Search for a particular product.
 - Place orders and make online payments to purchase products.
