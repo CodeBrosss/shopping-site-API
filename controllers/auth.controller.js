@@ -218,6 +218,24 @@ exports.adminSignIn = async(req, res) => {
     }
 }
 
+exports.editUser = asyncWrapper(async (req, res) => {
+    const id = req.params.userId;
+    
+    let newUser = await {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
+    }
+    
+    let update = await User.findOneAndUpdate({ _id: id }, newUser, { new: true });
+
+    res.status(200).json({
+        message: "User information updated successfuly",
+        update,
+    });
+    
+});
+
 exports.grantAccess = (action, resource) => {
     return async (req, res, next) => {
         try {

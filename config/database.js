@@ -6,11 +6,11 @@ function newFunction() {
     dotenv.config();
 }
 
-async function connectDB(cb) {
+async function connectDB() {
     try {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('Database connected succesfully');
-        cb();
+        return;
     } catch (error) {
         console.log(error);
     }
