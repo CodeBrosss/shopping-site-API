@@ -132,10 +132,7 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
      return res.status(201).json({
          status: 'success',
          message: 'Registration successful',
-         id: newAdmin._id,
-         adminPhotoStoragePath: newAdmin.photo.storagePath,
-         contentType: newAdmin.photo.contentType,
-         name: "picture",
+         newAdmin,
      });
     } catch (error) {
       res.status(500).json({
@@ -219,10 +216,12 @@ exports.adminSignIn = async(req, res) => {
     }
 }
 
-exports.editUser = asyncWrapper(async (req, res) => {
+exports.editUser = asyncWrapper(async (req, res, next) => {
     const { error } = validateUserEdit(req.body);
-    if (error) res.status(400).json({error: error})
-    
+    if (error) return next(
+        new AppError("Invalid input", 400)
+    )
+
     const id = req.user.id;
     
     let newUser = await {
@@ -265,7 +264,7 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
      
     res.status(200).json({
         message: "Admin profile updated successfuly",
-        update: update.lastName
+        update,
     });
     
 });
