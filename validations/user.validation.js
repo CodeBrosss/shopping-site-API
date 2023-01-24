@@ -21,7 +21,28 @@ function validateLogin(user) {
 	return Schema.validate(user);
 }
 
+function validateUserEdit(user) {
+	const Schema = Joi.object().keys({
+		firstName: Joi.string(),
+		lastName: Joi.string(),
+		email: Joi.string().email(), 
+	});
+
+	return Schema.validate(user)
+}
+
+function validatePasswordChange(passwords) {
+	const Schema = Joi.object().keys({
+		oldPassword: Joi.string().min(7).required(),
+		newPassword: Joi.string().min(7).required(),
+	});
+
+	return Schema.validate(passwords)
+}
+
 module.exports = {
 	validateSignUp,
 	validateLogin,
+	validateUserEdit,
+	validatePasswordChange,
 };

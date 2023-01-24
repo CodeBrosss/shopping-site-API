@@ -31,7 +31,6 @@ const adminSchema = new Schema({
     }],
     photo: {
         storagePath: { type: String },
-        data: Buffer,
         contentType: String
     },
     sales: [{

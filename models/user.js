@@ -27,11 +27,6 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "favourite"
     }],
-    photo: {
-        storagePath: { type: String },
-        data: Buffer,
-        contentType: String
-    },
     accessToken: {
         type: String
     }

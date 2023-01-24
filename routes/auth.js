@@ -4,6 +4,8 @@ const {
     signUp, 
     signIn,
     fetchAllUsers,
+    editUser,
+    changeUserPassword,
     getHeaderToken,
     checkIfLoggedIn,
     grantAccess
@@ -13,12 +15,25 @@ const {
 router.route("/").get(
     getHeaderToken,
     checkIfLoggedIn,
-    grantAccess("readAny", "user"),
+    grantAccess("readAny", "profile"),
     fetchAllUsers
 );
 
 
-router.route("/user/signup").post(signUp);
+router.route("/signup").post(signUp);
 router.route("/signin").post(signIn);
+router.route("/user/edit").put(
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess("updateOwn", "profile"),
+    editUser
+    );
+
+router.route("/:userId/password/edit").put(
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess("updateOwn", "password"),
+    changeUserPassword
+);
 
 module.exports = router;

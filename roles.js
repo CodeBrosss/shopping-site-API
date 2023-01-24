@@ -8,13 +8,15 @@ ac.grant("basic")
  .readOwn("favourite")
  .deleteOwn("favourite")
  .createOwn("like")
+ .updateOwn("password")
+ .updateOwn("profile")
 
 ac.grant("admin")
  .extend("basic")
  .createOwn("product")
  .updateAny("product")
  .deleteAny("product")
- .readAny("user")
+ .readAny("profile")
 
   return ac; 
 })();

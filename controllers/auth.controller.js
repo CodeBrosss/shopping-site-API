@@ -12,6 +12,8 @@ const AppError = require("../utils/appError");
 const {
     validateSignUp,
     validateLogin,
+    validateUserEdit,
+    validatePasswordChange,
 } = require('../validations/user.validation');
 const { roles } = require("../roles");
 require("dotenv").config();
@@ -113,8 +115,7 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
          email: req.body.email,
          password: hashedPassword,
          photo: {
-            storagePath: path.join('public', Admin.adminPhotoBasePath +  '/' + req.file.filename),
-            data: fs.readFileSync(path.join('public', Admin.adminPhotoBasePath + '/' + req.file.filename)),
+            storagePath: req.file.path,
             contentType: req.file.mimetype,
         }
      });
@@ -131,10 +132,7 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
      return res.status(201).json({
          status: 'success',
          message: 'Registration successful',
-         id: newAdmin._id,
-         adminPhotoStoragePath: newAdmin.photo.storagePath,
-         contentType: newAdmin.photo.contentType,
-         name: "picture",
+         newAdmin,
      });
     } catch (error) {
       res.status(500).json({
@@ -218,6 +216,116 @@ exports.adminSignIn = async(req, res) => {
     }
 }
 
+exports.editUser = asyncWrapper(async (req, res, next) => {
+    const { error } = validateUserEdit(req.body);
+    if (error) return next(
+        new AppError("Invalid input", 400)
+    )
+
+    const id = req.user.id;
+    
+    let newUser = await {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
+    }
+    
+    let update = await User.findOneAndUpdate({ _id: id }, newUser, { new: true });
+
+    res.status(200).json({
+        message: "User information updated successfuly",
+        update,
+    });
+    
+});
+
+exports.editAdmin = asyncWrapper(async (req, res) => {
+    const id = req.user.id;
+    const oldAdmin = await Admin.findOne({ _id: id })
+
+    let newAdmin = await {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email
+    }
+    
+    if (req.file) {
+        // delete old image
+        const imagePath =  oldAdmin.photo.storagePath;
+        fs.unlinkSync(path.join(imagePath));
+         
+        newAdmin.photo = await {
+            storagePath: req.file.path,
+            contentType: req.file.mimetype
+        }
+    }
+     
+    let update = await Admin.findOneAndUpdate({ _id: id }, newAdmin, { new: true });
+     
+    res.status(200).json({
+        message: "Admin profile updated successfuly",
+        update,
+    });
+    
+});
+
+exports.changeUserPassword = asyncWrapper(async (req, res, next) => {
+    // validate req body
+    const { error } = validatePasswordChange(req.body);
+    if (error) return next(new AppError(error.message, 400))
+     
+    const { oldPassword, newPassword } = req.body;
+    const id = req.params.userId;
+    const user = await User.findOne({ _id: id })
+     
+    const correctPassword = await comparePassword(oldPassword, user.password);
+    if (!correctPassword) {
+        res.status(400).json({
+            message: "Old password is incorrect"
+        })
+    }
+     
+    const newHashedPassword = await hashPassword(newPassword, 10);
+    const passwordUpdate = await {
+        password: newHashedPassword
+    }
+     
+    const update = await User.findOneAndUpdate({_id: id}, passwordUpdate, {new: true});
+     
+    res.status(200).json({
+        message: "Password changed successfully",
+        update,
+    })
+})  
+
+exports.changeAdminPassword = asyncWrapper(async (req, res, next) => {
+    // validate req body
+    const { error } = validatePasswordChange(req.body);
+    if (error) return next(new AppError(error.message, 400))
+     
+    const { oldPassword, newPassword } = req.body;
+    const id = req.user;
+    const admin = await Admin.findOne({ _id: id })
+     
+    const correctPassword = await comparePassword(oldPassword, admin.password);
+    if (!correctPassword) {
+        res.status(400).json({
+            message: "Old password is incorrect"
+        })
+    }
+     
+    const newHashedPassword = await hashPassword(newPassword, 10);
+    const passwordUpdate = await {
+        password: newHashedPassword
+    }
+     
+    const update = await Admin.findOneAndUpdate({_id: id}, passwordUpdate, {new: true});
+     
+    res.status(200).json({
+        message: "Administrator password changed successfully",
+    })
+})
+
 exports.grantAccess = (action, resource) => {
     return async (req, res, next) => {
         try {
@@ -246,6 +354,7 @@ exports.checkIfLoggedIn = asyncWrapper(async(req, res, next) => {
 });
 
 exports.getHeaderToken = async(req, res, next) => {
+     
     try {
         if (req.headers['authorization']) {
             const accessToken = req.headers['authorization'].split(' ')[1];

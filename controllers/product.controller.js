@@ -36,7 +36,6 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
         })
     }
 
-    
     // upload file to google drive
     //await uploadFile(req.file);
 
@@ -45,23 +44,19 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
         title: req.body.title,
         description: req.body.description,
         price: req.body.price,
+        category: req.body.category,
         productImage: {
-            storagePath: path.join('public', "/uploads/productImages/" + req.file.filename),
-            data: fs.readFileSync(path.join('public', "/uploads/productImages/" + req.file.filename)),
+            storagePath: req.file.path,
             contentType: req.file.mimetype,
         }
     })
          
     res.status(201).json({
         message: "Product created successfully",
-        imagePath: newProduct.productImage.storagePath,
-        productImageType: newProduct.productImage.contentType,
-        name: "picture",
-        id: newProduct._id,
+        newProduct,
     })
     
 });
-
 
 // fetch all products
 exports.fetchAllProducts = asyncWrapper(async(req, res) => {
@@ -74,7 +69,6 @@ exports.fetchAllProducts = asyncWrapper(async(req, res) => {
         products,
     });
 })
-
 
 // fetch single product
 exports.fetchProduct = asyncWrapper(async (req, res, next) => {
@@ -90,7 +84,6 @@ exports.fetchProduct = asyncWrapper(async (req, res, next) => {
     });
 });
 
-
 // edit product
 exports.editProduct = asyncWrapper(async (req, res) => {
     const id = req.params.id;
@@ -100,7 +93,8 @@ exports.editProduct = asyncWrapper(async (req, res) => {
     let newProduct = await {
         title: req.body.title,
         description: req.body.description,
-        price: req.body.price
+        price: req.body.price,
+        category: req.body.category
     }
     
     if (req.file) {
@@ -109,8 +103,7 @@ exports.editProduct = asyncWrapper(async (req, res) => {
         fs.unlinkSync(path.join(imagePath));
              
             newProduct.productImage = {
-                storagePath: path.join('public', "/uploads/productImages/" + req.file.filename),
-                data: fs.readFileSync(path.join('public', "/uploads/productImages/" + req.file.filename)),
+                storagePath: req.file.path,
                 contentType: req.file.mimetype
             }
     }
@@ -119,14 +112,13 @@ exports.editProduct = asyncWrapper(async (req, res) => {
 
     res.status(200).json({
         message: "Product updated successfuly",
-        update: update.productImage.storagePath
+        update,
     });
     
 });
 
 // delete product
 exports.deleteProduct = asyncWrapper(async(req, res) => {
-    
     // delete product image from server
     const product = await Product.findOne({ _id: req.params.id })
     const imagePath =  product.productImage.storagePath;
@@ -144,6 +136,7 @@ exports.deleteProduct = asyncWrapper(async(req, res) => {
     });
 });
 
+// toggle favourite
 exports.toggleFavourite = asyncWrapper(async(req, res) => {
     
     const product = await Product.findOne({ _id: req.params.productId});
@@ -189,6 +182,7 @@ exports.toggleFavourite = asyncWrapper(async(req, res) => {
     }
 });
 
+// get all user favourites
 exports.fetchFavourites = asyncWrapper(async (req, res, next) => {
     
     const filter = { user: req.user._id }
@@ -202,6 +196,7 @@ exports.fetchFavourites = asyncWrapper(async (req, res, next) => {
     
 });
 
+// like and unlike
 exports.toggleLike = asyncWrapper(async (req, res, next) => {
     let productId = req.params.productId;
     const product = await Product.findOne({ _id: productId });
