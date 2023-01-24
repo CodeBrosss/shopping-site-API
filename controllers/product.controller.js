@@ -46,8 +46,7 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
         description: req.body.description,
         price: req.body.price,
         productImage: {
-            storagePath: path.join('public', "/uploads/productImages/" + req.file.filename),
-            data: fs.readFileSync(path.join('public', "/uploads/productImages/" + req.file.filename)),
+            storagePath: req.file.path,
             contentType: req.file.mimetype,
         }
     })
@@ -62,7 +61,6 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
     
 });
 
-
 // fetch all products
 exports.fetchAllProducts = asyncWrapper(async(req, res) => {
     let filter = {};
@@ -74,7 +72,6 @@ exports.fetchAllProducts = asyncWrapper(async(req, res) => {
         products,
     });
 })
-
 
 // fetch single product
 exports.fetchProduct = asyncWrapper(async (req, res, next) => {
@@ -89,7 +86,6 @@ exports.fetchProduct = asyncWrapper(async (req, res, next) => {
         product,
     });
 });
-
 
 // edit product
 exports.editProduct = asyncWrapper(async (req, res) => {
@@ -109,8 +105,7 @@ exports.editProduct = asyncWrapper(async (req, res) => {
         fs.unlinkSync(path.join(imagePath));
              
             newProduct.productImage = {
-                storagePath: path.join('public', "/uploads/productImages/" + req.file.filename),
-                data: fs.readFileSync(path.join('public', "/uploads/productImages/" + req.file.filename)),
+                storagePath: req.file.path,
                 contentType: req.file.mimetype
             }
     }
@@ -144,6 +139,7 @@ exports.deleteProduct = asyncWrapper(async(req, res) => {
     });
 });
 
+// toggle favourite
 exports.toggleFavourite = asyncWrapper(async(req, res) => {
     
     const product = await Product.findOne({ _id: req.params.productId});
@@ -189,6 +185,7 @@ exports.toggleFavourite = asyncWrapper(async(req, res) => {
     }
 });
 
+// get all user favourites
 exports.fetchFavourites = asyncWrapper(async (req, res, next) => {
     
     const filter = { user: req.user._id }
@@ -202,6 +199,7 @@ exports.fetchFavourites = asyncWrapper(async (req, res, next) => {
     
 });
 
+// like and unlike
 exports.toggleLike = asyncWrapper(async (req, res, next) => {
     let productId = req.params.productId;
     const product = await Product.findOne({ _id: productId });

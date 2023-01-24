@@ -23,7 +23,6 @@ const productSchema = new Schema({
     }],
     productImage: {
         storagePath: { type: String },
-        data: Buffer,
         contentType: String
     }
 })

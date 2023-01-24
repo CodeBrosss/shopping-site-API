@@ -15,17 +15,17 @@ const {
 router.route("/").get(
     getHeaderToken,
     checkIfLoggedIn,
-    grantAccess("readAny", "user"),
+    grantAccess("readAny", "profile"),
     fetchAllUsers
 );
 
 
-router.route("/user/signup").post(signUp);
+router.route("/signup").post(signUp);
 router.route("/signin").post(signIn);
-router.route("/:userId/edit").put(
+router.route("/user/edit").put(
     getHeaderToken,
     checkIfLoggedIn,
-    grantAccess("updateOwn", "user"),
+    grantAccess("updateOwn", "profile"),
     editUser
     );
 

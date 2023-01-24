@@ -5,7 +5,8 @@ const { adminSignup,
         changeAdminPassword,
         getHeaderToken,
         checkIfLoggedIn,
-        grantAccess 
+        grantAccess,
+        editAdmin,
 } = require("../controllers/auth.controller");
 const path = require("path");
 const Admin = require("../models/admin");
@@ -34,5 +35,12 @@ router.route("/password/edit").put(
     grantAccess("updateOwn", "password"),
     changeAdminPassword
 );
+router.route("/edit").put(
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess("updateOwn", "profile"),
+    upload.single("picture"),
+    editAdmin
+)
 
 module.exports = router;
