@@ -113,8 +113,7 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
          email: req.body.email,
          password: hashedPassword,
          photo: {
-            storagePath: path.join('public', Admin.adminPhotoBasePath +  '/' + req.file.filename),
-            data: fs.readFileSync(path.join('public', Admin.adminPhotoBasePath + '/' + req.file.filename)),
+            storagePath: req.file.path,
             contentType: req.file.mimetype,
         }
      });
@@ -219,7 +218,7 @@ exports.adminSignIn = async(req, res) => {
 }
 
 exports.editUser = asyncWrapper(async (req, res) => {
-    const id = req.params.userId;
+    const id = req.user.id;
     
     let newUser = await {
         firstName: req.body.firstName,
@@ -232,6 +231,36 @@ exports.editUser = asyncWrapper(async (req, res) => {
     res.status(200).json({
         message: "User information updated successfuly",
         update,
+    });
+    
+});
+
+exports.editAdmin = asyncWrapper(async (req, res) => {
+    const id = req.user.id;
+    const oldAdmin = await Admin.findOne({ _id: id })
+
+    let newAdmin = await {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email
+    }
+    
+    if (req.file) {
+        // delete old image
+        const imagePath =  oldAdmin.photo.storagePath;
+        fs.unlinkSync(path.join(imagePath));
+         
+        newAdmin.photo = await {
+            storagePath: req.file.path,
+            contentType: req.file.mimetype
+        }
+    }
+     
+    let update = await Admin.findOneAndUpdate({ _id: id }, newAdmin, { new: true });
+     
+    res.status(200).json({
+        message: "Admin profile updated successfuly",
+        update: update.lastName
     });
     
 });
@@ -264,6 +293,7 @@ exports.checkIfLoggedIn = asyncWrapper(async(req, res, next) => {
 });
 
 exports.getHeaderToken = async(req, res, next) => {
+     
     try {
         if (req.headers['authorization']) {
             const accessToken = req.headers['authorization'].split(' ')[1];
