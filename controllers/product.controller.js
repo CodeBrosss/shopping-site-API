@@ -35,7 +35,6 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
             message: "Product with this title already exists"
         })
     }
-
     // upload file to google drive
     //await uploadFile(req.file);
 
@@ -46,7 +45,7 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
         price: req.body.price,
         category: req.body.category,
         productImage: {
-            storagePath: req.file.path,
+            storagePath: `/product/image/${req.file.filename}`,
             contentType: req.file.mimetype,
         }
     })

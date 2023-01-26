@@ -85,16 +85,18 @@ exports.signUp = asyncWrapper(async (req, res, next) => {
 });
 
 exports.adminSignup = asyncWrapper(async (req, res, next) => {
-     
     // validate user body request
     const { error } = validateSignUp(req.body);
-    if (error) return next(new AppError(error.message, 400));
-     
+    if (error) {
+        console.log(error)
+        return next(new AppError(error.message, 400));
+    }
+    
     // check if user exists
     const existingAdmin = await Admin.findOne({
         email: req.body.email,
     });
- 
+     
     if (existingAdmin) {
         return next(
             new AppError(
@@ -103,11 +105,12 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
             )
         );
     };
- 
+     
     // hashPassword
     const hashedPassword = await hashPassword(req.body.password, 10);
-     
+      
     try {
+         
      // create a new user
     const newAdmin = new Admin({
          firstName: req.body.firstName,
@@ -115,10 +118,11 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
          email: req.body.email,
          password: hashedPassword,
          photo: {
-            storagePath: req.file.path,
+            storagePath: `/admin/image/${req.file.filename}`,
             contentType: req.file.mimetype,
         }
      });
+      
       
      const accessToken = jwt.sign({ 
          userId: newAdmin._id, userRole: newAdmin.role}, 
@@ -128,7 +132,7 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
       
      newAdmin.accessToken = accessToken;
      await newAdmin.save();
-      
+     console.log("here3")
      return res.status(201).json({
          status: 'success',
          message: 'Registration successful',

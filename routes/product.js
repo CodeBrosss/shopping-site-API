@@ -17,14 +17,20 @@ const {
 const path = require("path");
 const Product = require("../models/product");
 const uploadPath = path.join('public', Product.productImageBasePath)
-const imageMimeTypes = ["image/jpeg", "image/png", "image/gif"]
+const imageMimeTypes = ["image/jpg", "image/png", "image/gif"]
 const multer  = require('multer')
-const upload = multer({
-    dest: uploadPath,
-    fileFilter: (req, file, callback) => {
-        callback(null, imageMimeTypes.includes(file.mimetype))
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadPath)
+    },
+    filename: function (req, file, cb) {
+        cb(null, `${Date.now()}-${file.originalname}`)
+    },
+    fileFilter: (req, file, cb) => {
+        cb(null, imageMimeTypes.includes(file.mimetype))
     }
 })
+const upload = multer({ storage: storage })
 
 
 router.route("/upload") 
