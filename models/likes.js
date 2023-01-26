@@ -13,5 +13,5 @@ const likesSchema = new Schema({
 }, { timestamps: true });
 
 likesSchema.index({ user: 1, like: 1 }, { unique: true });
-const ProductLike = mongoose.model("ProductLike", likesSchema);
-module.exports = ProductLike;
+// const ProductLike = mongoose.model("ProductLike", likesSchema);
+module.exports = mongoose.model("ProductLike", likesSchema);

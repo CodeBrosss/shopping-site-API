@@ -1,18 +1,21 @@
 const express = require("express");
 const router = express.Router();
-const { adminSignup, 
-        adminSignIn,
-        changeAdminPassword,
-        getHeaderToken,
-        checkIfLoggedIn,
-        grantAccess,
-        editAdmin,
+const {
+    adminSignup, 
+    adminSignIn,
+    changeAdminPassword,
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess,
+    editAdmin,
 } = require("../controllers/auth.controller");
 const path = require("path");
 const Admin = require("../models/admin");
-const uploadPath = path.join('public', Admin.adminPhotoBasePath)
+const uploadPath = path.join('public', Admin.adminPhotoBasePath);
 const imageMimeTypes = ["image/jpeg", "image/png", "image/gif"]
-const multer  = require('multer')
+const multer  = require('multer');
+
+
 const upload = multer({
     dest: uploadPath,
     fileFilter: (req, file, callback) => {
