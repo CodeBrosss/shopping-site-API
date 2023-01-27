@@ -63,27 +63,21 @@ exports.fetchAllProducts = asyncWrapper(async(req, res) => {
     if (req.query) filter = req.query;
      
     let title = filter.title
-    const products = await Product.find({
-        title: {
-            $regex: new RegExp("^" + title),
-            $options: "i"
-        }
-    })
-
-    if (products[0] == undefined) {
-        const products = await Product.find({
-            title: {
-                $regex: new RegExp(title + "$"),
-                $options: "i"
+    const products = await Product.find({$or: [
+            {
+                title: {
+                    $regex: new RegExp("^" + title),
+                    $options: "i"
+                }
+            },
+            {
+                title: {
+                    $regex: new RegExp(title + "$"),
+                    $options: "i"
+                }
             }
-        })
-
-        return res.status(200).json({
-            status: 'success',
-            message: 'Products fetched successfully',
-            products,
-        });
-    }
+        ]
+    })
      
     res.status(200).json({
         status: 'success',
