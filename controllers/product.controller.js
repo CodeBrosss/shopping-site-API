@@ -45,7 +45,7 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
         price: req.body.price,
         category: req.body.category,
         productImage: {
-            storagePath: `public/uploads/productImages/${req.file.filename}`,
+            storagePath: req.file.path,
             contentType: req.file.mimetype,
         }
     })
