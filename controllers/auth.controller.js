@@ -118,7 +118,7 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
          email: req.body.email,
          password: hashedPassword,
          photo: {
-            storagePath: `/admin/image/${req.file.filename}`,
+            storagePath: `/public/uploads/adminPhoto/${req.file.filename}`,
             contentType: req.file.mimetype,
         }
      });

@@ -26,8 +26,8 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/paystack", paystackRouter);
-app.use("/api/v1/product/image", express.static("public/uploads/productImages"))
-app.use("/api/v1/admin/image", express.static("public/uploads/adminPhoto"))
+app.use("/api/v1/public/uploads/productImages", express.static("public/uploads/productImages"))
+app.use("/api/v1/public/uploads/adminPhoto", express.static("public/uploads/adminPhoto"))
 app.use(NotFound);
 app.use(errorHandler);
 
