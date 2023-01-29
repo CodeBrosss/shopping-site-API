@@ -65,7 +65,7 @@ exports.signUp = asyncWrapper(async (req, res, next) => {
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: '1w'
+      expiresIn: '1h'
     }
   )
   newUser.accessToken = accessToken
@@ -120,7 +120,7 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
       },
       process.env.JWT_SECRET,
       {
-        expiresIn: '1w'
+        expiresIn: '1h'
       }
     )
 
@@ -165,7 +165,7 @@ exports.signIn = asyncWrapper(async (req, res) => {
   const accessToken = jwt.sign(
     { userId: user._id, userRole: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: '1w' }
+    { expiresIn: '1h' }
   )
   await User.findByIdAndUpdate(user._id, { accessToken })
 
@@ -200,7 +200,7 @@ exports.adminSignIn = async (req, res, next) => {
     const accessToken = jwt.sign(
       { userId: admin._id, userRole: admin.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1w' }
+      { expiresIn: '1h' }
     )
     await Admin.findByIdAndUpdate(admin._id, { accessToken })
 
