@@ -12,7 +12,7 @@ const {
 } = require("../controllers/auth.controller");
 
 
-router.route("/").get(
+router.route("/users").get(
     getHeaderToken,
     checkIfLoggedIn,
     grantAccess("readAny", "profile"),

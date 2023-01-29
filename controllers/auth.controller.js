@@ -118,7 +118,7 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
          email: req.body.email,
          password: hashedPassword,
          photo: {
-            storagePath: `/public/uploads/adminPhoto/${req.file.filename}`,
+            storagePath: `public/uploads/adminPhoto/${req.file.filename}`,
             contentType: req.file.mimetype,
         }
      });
@@ -259,7 +259,7 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
         fs.unlinkSync(path.join(imagePath));
          
         newAdmin.photo = await {
-            storagePath: req.file.path,
+            storagePath: `public/uploads/adminPhoto/${req.file.filename}`,
             contentType: req.file.mimetype
         }
     }

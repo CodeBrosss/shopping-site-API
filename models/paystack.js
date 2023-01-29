@@ -20,10 +20,13 @@ const paystackSchema = new Schema({
         type: String,
         required: true,
     },
-    productId: {
-        type: Schema.Types.ObjectId,
-        ref: "Product"
-    },
+    products: [{
+        productId: {
+            type: Schema.Types.ObjectId,
+            ref: "Product"
+        },
+        quantity: Number
+    }],
     deliveryLocation: String
 })
 

@@ -8,11 +8,10 @@ const {
 const Admin = require("../models/admin");
 
 exports.makePayment = (req, res) => {
-    console.log(req.body)
-    const form = _.pick(req.body, [`amount`,`email`,`fullName`, `productId`, `deliveryLocation`]);
+    const form = _.pick(req.body, [`amount`,`email`,`fullName`, `products`, `deliveryLocation`]);
     form.metadata = {
         fullName : form.fullName,
-        productId: form.productId,
+        products: form.products,
         deliveryLocation: form.deliveryLocation
     }
     form.amount *= 100;
@@ -39,15 +38,25 @@ exports.verifyPayment = (req,res) => {
             })
             return 
         }
+
         response = JSON.parse(body);
-        const data = _.at(response.data, ['reference', 'amount','customer.email', 'metadata.fullName', 'metadata.productId', 'metadata.deliveryLocation']); //store them in array using lodash
-        let reference = data[0];
-        [reference, amount, email, fullName, productId, deliveryLocation] = data; // assign values of array to variables
-        const payment = {reference, amount, email, fullName, productId, deliveryLocation} // make an object of the variables
+        console.log(response)
+        const data = _.at(response.data, [
+            'reference', 
+            'amount',
+            'customer.email', 
+            'metadata.fullName', 
+            'metadata.products', 
+            'metadata.deliveryLocation'
+        ]); //store them in array using lodash
+        
+        [reference, amount, email, fullName, products, deliveryLocation] = data; // assign values of array to variables
+        const payment = {reference, amount, email, fullName, products, deliveryLocation} // make an object of the variables
         payment.amount /= 100; //convert from kobo to naira
         savePayment(res, payment) 
     })
 }
+
 
 function savePayment(res, payment) {
     Paystack.create(payment).then((payment)=>{
