@@ -8,10 +8,12 @@ const {
 const Admin = require("../models/admin");
 
 exports.makePayment = (req, res) => {
-    const form = _.pick(req.body, [`amount`,`email`,`fullName`, `productId`]);
+    console.log(req.body)
+    const form = _.pick(req.body, [`amount`,`email`,`fullName`, `productId`, `deliveryLocation`]);
     form.metadata = {
         fullName : form.fullName,
-        productId: form.productId
+        productId: form.productId,
+        deliveryLocation: form.deliveryLocation
     }
     form.amount *= 100;
     initializePayment(form, (error, body)=>{
@@ -38,10 +40,10 @@ exports.verifyPayment = (req,res) => {
             return 
         }
         response = JSON.parse(body);
-        const data = _.at(response.data, ['reference', 'amount','customer.email', 'metadata.fullName', 'metadata.productId']); //store them in array using lodash
+        const data = _.at(response.data, ['reference', 'amount','customer.email', 'metadata.fullName', 'metadata.productId', 'metadata.deliveryLocation']); //store them in array using lodash
         let reference = data[0];
-        [reference, amount, email, fullName, productId] = data; // assign values of array to variables
-        const payment = {reference, amount, email, fullName, productId} // make an object of the variables
+        [reference, amount, email, fullName, productId, deliveryLocation] = data; // assign values of array to variables
+        const payment = {reference, amount, email, fullName, productId, deliveryLocation} // make an object of the variables
         payment.amount /= 100; //convert from kobo to naira
         savePayment(res, payment) 
     })

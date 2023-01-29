@@ -35,7 +35,6 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
             message: "Product with this title already exists"
         })
     }
-
     // upload file to google drive
     //await uploadFile(req.file);
 
@@ -62,7 +61,24 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
 exports.fetchAllProducts = asyncWrapper(async(req, res) => {
     let filter = {};
     if (req.query) filter = req.query;
-    const products = await Product.find(filter);
+     
+    let title = filter.title
+    const products = await Product.find({$or: [
+            {
+                title: {
+                    $regex: new RegExp("^" + title),
+                    $options: "i"
+                }
+            },
+            {
+                title: {
+                    $regex: new RegExp(title + "$"),
+                    $options: "i"
+                }
+            }
+        ]
+    })
+     
     res.status(200).json({
         status: 'success',
         message: 'Products fetched successfully',
@@ -120,15 +136,26 @@ exports.editProduct = asyncWrapper(async (req, res) => {
 // delete product
 exports.deleteProduct = asyncWrapper(async(req, res) => {
     // delete product image from server
+    console.log(req.params.id)
     const product = await Product.findOne({ _id: req.params.id })
+    console.log("here")
     const imagePath =  product.productImage.storagePath;
+    console.log("here1")
     fs.unlinkSync(path.join(imagePath));
-         
+    console.log("her2")
     // delete from db
     const deleted = await Product.deleteOne({ _id: req.params.id })
     if (!deleted) res.status(400).json({
         message: "Failed to delete product"
     })
+
+    const like = await ProductLike.findOne({ product: product.id })
+    if (like) {
+        const likeDeleted = await ProductLike.deleteOne({ _id: like.id })
+        if (!likeDeleted) {
+            res.status(400).json({ message: "Product deleted but failed to delete like" })
+        }
+    }
 
     res.status(200).json({
         message: "Product deleted successfully",
@@ -203,19 +230,20 @@ exports.toggleLike = asyncWrapper(async (req, res, next) => {
     if (!product) return next(new AppError(
         "No product found", 400
     ))
-
+     
     const currentUser = req.user;
-
     const currentUserLike = await ProductLike.findOne({
         product: productId,
         user: currentUser._id
     })
-    
+     console.log("here1")
     if (!currentUserLike) {
+        console.log("here2")
         const likeData = await ProductLike.create({
             product: productId,
             user: currentUser._id
         })
+        console.log("here3")
         await Product.updateOne(
             { _id: productId }, 
             { $push: {likes: likeData._id} }
@@ -224,15 +252,16 @@ exports.toggleLike = asyncWrapper(async (req, res, next) => {
             message: "Liked successfully" 
         })
     } else {
+        console.log("here4")
         await ProductLike.deleteOne({ 
             _id: currentUserLike._id 
         })
-    
+        console.log("here5")
         await Product.updateOne(
             { _id: productId }, 
             { $pull: {likes: currentUserLike._id} }
         )
-    
+         
         res.status(200).json({ 
             message: "You unliked this product" 
         })
