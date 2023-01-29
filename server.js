@@ -1,4 +1,4 @@
-require('dotenv').config()
+ require('dotenv').config()
 const express = require('express')
 const app = express()
 const { connectDB } = require('./config/database')
@@ -16,7 +16,7 @@ const errorHandler = require('./middlewares/errorHandler')
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(bodyParser.urlencoded({ extended: true }))
-
+ 
 app.use(cors())
 app.use('/api/v1/', indexRouter)
 app.use('/api/v1/auth/admin', adminRouter)
@@ -27,6 +27,10 @@ app.use('/api/v1/paystack', paystackRouter)
 
 app.use(NotFound)
 app.use(errorHandler)
+
+app.get('/', (req,res) =>{
+    res.send('<h2>Shooping site API</h2><a href="">Documentation</a>')
+});
 
 const port = process.env.PORT || 3000
 const start = async () => {

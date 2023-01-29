@@ -14,8 +14,6 @@ const {
 const { upload } = require('../middlewares/cloudinary')
 const expressBusboy = require('express-busboy')
 
-
-
 router.route('/signup').post(upload.single('picture'), adminSignup)
 expressBusboy.extend(router).route('/signin').post(adminSignIn)
 

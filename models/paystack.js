@@ -27,5 +27,5 @@ const paystackSchema = new Schema({
     deliveryLocation: String
 })
 
-const Paystack = mongoose.model("Paystack", paystackSchema);
-module.exports = Paystack;
+// const Paystack = mongoose.model("Paystack", paystackSchema);
+module.exports = mongoose.model("Paystack", paystackSchema); // shorter codes like this runs faster.
