@@ -23,7 +23,8 @@ const paystackSchema = new Schema({
     productId: {
         type: Schema.Types.ObjectId,
         ref: "Product"
-    }
+    },
+    deliveryLocation: String
 })
 
 // const Paystack = mongoose.model("Paystack", paystackSchema);
