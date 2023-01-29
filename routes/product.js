@@ -13,24 +13,8 @@ const {
     checkIfLoggedIn,
     grantAccess,
     getHeaderToken,
-} = require("../controllers/auth.controller")
-const path = require("path");
-const Product = require("../models/product");
-const uploadPath = path.join('public', Product.productImageBasePath)
-const imageMimeTypes = ["image/jpg", "image/png", "image/gif"]
-const multer  = require('multer')
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadPath)
-    },
-    filename: function (req, file, cb) {
-        cb(null, `${Date.now()}-${file.originalname}`)
-    },
-    fileFilter: (req, file, cb) => {
-        cb(null, imageMimeTypes.includes(file.mimetype))
-    }
-})
-const upload = multer({ storage: storage })
+} = require("../controllers/auth.controller");
+const { upload } = require("../middlewares/cloudinary");
 
 
 router.route("/upload") 
