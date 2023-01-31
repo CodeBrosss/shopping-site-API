@@ -9,15 +9,12 @@ const {
   grantAccess,
   editAdmin
 } = require('../controllers/auth.controller')
-// const path = require('path')
-// const Admin = require('../models/admin')
-const { upload } = require('../middlewares/cloudinary')
-const expressBusboy = require('express-busboy')
 
+const { upload } = require('../middlewares/cloudinary')
 
 
 router.route('/signup').post(upload.single('picture'), adminSignup)
-expressBusboy.extend(router).route('/signin').post(adminSignIn)
+router.route('/signin').post(adminSignIn)
 
 router
   .route('/password/edit')

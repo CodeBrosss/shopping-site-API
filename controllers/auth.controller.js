@@ -18,6 +18,7 @@ const path = require('path')
 const fs = require('fs')
 
 const asyncWrapper = require('../utils/catchAsync')
+const { cloudinary } = require('../cloudinary')
 
 // get all users
 exports.fetchAllUsers = asyncWrapper(async (req, res, next) => {
@@ -65,7 +66,7 @@ exports.signUp = asyncWrapper(async (req, res, next) => {
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: '1h'
+      expiresIn: '1w'
     }
   )
   newUser.accessToken = accessToken
@@ -120,7 +121,7 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
       },
       process.env.JWT_SECRET,
       {
-        expiresIn: '1h'
+        expiresIn: '1w'
       }
     )
 
@@ -133,7 +134,6 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
       newAdmin
     })
   } catch (error) {
-
     res.status(500).json({
       message: 'Internal server error',
       error: error
@@ -165,7 +165,7 @@ exports.signIn = asyncWrapper(async (req, res) => {
   const accessToken = jwt.sign(
     { userId: user._id, userRole: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: '1h' }
+    { expiresIn: '1w' }
   )
   await User.findByIdAndUpdate(user._id, { accessToken })
 
@@ -200,7 +200,7 @@ exports.adminSignIn = async (req, res, next) => {
     const accessToken = jwt.sign(
       { userId: admin._id, userRole: admin.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '1w' }
     )
     await Admin.findByIdAndUpdate(admin._id, { accessToken })
 
@@ -236,9 +236,18 @@ exports.editUser = asyncWrapper(async (req, res, next) => {
 })
 
 exports.editAdmin = asyncWrapper(async (req, res) => {
+  // console.log(req.body)
   const id = req.user.id
   const oldAdmin = await Admin.findOne({ _id: id })
 
+  let newString
+  if (oldAdmin.photo) {
+    const url = oldAdmin.photo.storagePath
+    let extractedString = url.split('image/upload/v')[1].split('.jpg')[0]
+    let parts = extractedString.split('/')
+    parts.shift()
+    newString = parts.join('/')
+  }
   let newAdmin = await {
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -246,9 +255,10 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
   }
 
   if (req.file) {
-    // delete old image
-    const imagePath = oldAdmin.photo.storagePath
-    fs.unlinkSync(path.join(imagePath))
+    cloudinary.uploader.destroy(newString, (error, result) => {
+      error && console.error(error)
+      result && cosole.log({ result })
+    })
 
     newAdmin.photo = await {
       storagePath: req.file.path,
@@ -268,6 +278,7 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
 
 exports.changeUserPassword = asyncWrapper(async (req, res, next) => {
   // validate req body
+
   const { error } = validatePasswordChange(req.body)
   if (error) return next(new AppError(error.message, 400))
 
@@ -317,8 +328,7 @@ exports.changeAdminPassword = asyncWrapper(async (req, res, next) => {
   const passwordUpdate = await {
     password: newHashedPassword
   }
-
-  const update = await Admin.findOneAndUpdate({ _id: id }, passwordUpdate, {
+  await Admin.findOneAndUpdate({ _id: id }, passwordUpdate, {
     new: true
   })
 
