@@ -12,7 +12,7 @@ const {
 } = require("../controllers/product.controller");
 
 
-router.route("/:userId/favourites").get(
+router.route("/favourites").get(
     getHeaderToken,
     checkIfLoggedIn,
     grantAccess("readOwn", "favourite"),

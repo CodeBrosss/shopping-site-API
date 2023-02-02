@@ -28,9 +28,23 @@ exports.fetchAllUsers = asyncWrapper(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    message: 'Users fetched successfully'
+    message: 'Users fetched successfully',
+    users
   })
 })
+
+exports.fetchUser = asyncWrapper(async (req, res, next) => {
+  const user = await User.findOne({ _id: req.params.id });
+  if (!user)
+      return next(
+          new AppError('User not found or does not exist', 404)
+      );
+  res.status(200).json({
+      status: 'success',
+      message: 'User fetched successfully',
+      user,
+  });
+});
 
 // signup funtion
 exports.signUp = asyncWrapper(async (req, res, next) => {
@@ -103,40 +117,6 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
   try {
     // create a new user
     const newAdmin = new Admin({
-<<<<<<< HEAD
-         firstName: req.body.firstName,
-         lastName: req.body.lastName,
-         email: req.body.email,
-         password: hashedPassword,
-         photo: {
-            storagePath: `public/uploads/adminPhoto/${req.file.filename}`,
-            contentType: req.file.mimetype,
-        }
-     });
-      
-      
-     const accessToken = jwt.sign({ 
-         userId: newAdmin._id, userRole: newAdmin.role}, 
-         process.env.JWT_SECRET, {
-         expiresIn: "1h"
-     });
-      
-     newAdmin.accessToken = accessToken;
-     await newAdmin.save();
-     console.log("here3")
-     return res.status(201).json({
-         status: 'success',
-         message: 'Registration successful',
-         newAdmin,
-     });
-    } catch (error) {
-      res.status(500).json({
-         message: "Internal server error",
-         error: error
-      })
-    }
- });
-=======
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       email: req.body.email,
@@ -174,7 +154,6 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
     })
   }
 })
->>>>>>> d36e58316073a7ff79aa2379524dd79d1bf138c5
 
 // signin function
 exports.signIn = asyncWrapper(async (req, res) => {
@@ -213,7 +192,6 @@ exports.signIn = asyncWrapper(async (req, res) => {
 exports.adminSignIn = async (req, res, next) => {
   // validate user body request
   const { error } = validateLogin(req.body)
-  console.log(req.body)
   if (error) return next(new AppError(error.message, 400))
   const { email, password } = req.body
 
@@ -265,7 +243,7 @@ exports.editUser = asyncWrapper(async (req, res, next) => {
   let update = await User.findOneAndUpdate({ _id: id }, newUser, { new: true })
 
   res.status(200).json({
-    message: 'User information updated successfuly',
+    message: 'User information updated successfully',
     update
   })
 })
@@ -283,34 +261,12 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
   if (req.file) {
     // delete old image
     const imagePath = oldAdmin.photo.storagePath
-    fs.unlinkSync(path.join(imagePath))
+    //fs.unlinkSync(path.join(imagePath))
 
     newAdmin.photo = await {
       storagePath: req.file.path,
       contentType: req.file.mimetype
     }
-<<<<<<< HEAD
-    
-    if (req.file) {
-        // delete old image
-        const imagePath =  oldAdmin.photo.storagePath;
-        fs.unlinkSync(path.join(imagePath));
-         
-        newAdmin.photo = await {
-            storagePath: `public/uploads/adminPhoto/${req.file.filename}`,
-            contentType: req.file.mimetype
-        }
-    }
-     
-    let update = await Admin.findOneAndUpdate({ _id: id }, newAdmin, { new: true });
-     
-    res.status(200).json({
-        message: "Admin profile updated successfuly",
-        update,
-    });
-    
-});
-=======
   }
 
   let update = await Admin.findOneAndUpdate({ _id: id }, newAdmin, {
@@ -322,7 +278,6 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
     update
   })
 })
->>>>>>> d36e58316073a7ff79aa2379524dd79d1bf138c5
 
 exports.changeUserPassword = asyncWrapper(async (req, res, next) => {
   // validate req body
@@ -330,7 +285,7 @@ exports.changeUserPassword = asyncWrapper(async (req, res, next) => {
   if (error) return next(new AppError(error.message, 400))
 
   const { oldPassword, newPassword } = req.body
-  const id = req.params.userId
+  const id = req.user._id
   const user = await User.findOne({ _id: id })
 
   const correctPassword = await comparePassword(oldPassword, user.password)
@@ -361,7 +316,7 @@ exports.changeAdminPassword = asyncWrapper(async (req, res, next) => {
   if (error) return next(new AppError(error.message, 400))
 
   const { oldPassword, newPassword } = req.body
-  const id = req.user
+  const id = req.user._id
   const admin = await Admin.findOne({ _id: id })
 
   const correctPassword = await comparePassword(oldPassword, admin.password)
@@ -387,6 +342,7 @@ exports.changeAdminPassword = asyncWrapper(async (req, res, next) => {
 
 exports.grantAccess = (action, resource) => {
   return async (req, res, next) => {
+    //console.log(req.body)
     try {
       const permission = roles.can(req.user.role)[action](resource)
       if (!permission.granted) {
@@ -394,6 +350,7 @@ exports.grantAccess = (action, resource) => {
           error: "You don't have enough permissions to perform this action"
         })
       }
+      console.log(req.user)
       next()
     } catch (error) {
       next(error)
@@ -402,6 +359,7 @@ exports.grantAccess = (action, resource) => {
 }
 
 exports.checkIfLoggedIn = asyncWrapper(async (req, res, next) => {
+  //console.log(req.body)
   const user = res.locals.loggedInUser
   if (!user)
     return res.status(401).json({
@@ -412,6 +370,7 @@ exports.checkIfLoggedIn = asyncWrapper(async (req, res, next) => {
 })
 
 exports.getHeaderToken = async (req, res, next) => {
+  //console.log(req.body)
   try {
     if (req.headers['authorization']) {
       const accessToken = req.headers['authorization'].split(' ')[1]

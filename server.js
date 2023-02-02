@@ -26,7 +26,7 @@ app.use('/api/v1/products', productRouter)
 app.use('/api/v1/paystack', paystackRouter)
 
 app.use(NotFound)
-app.use(errorHandler)
+//app.use(errorHandler)
 
 const port = process.env.PORT || 3000
 const start = async () => {

@@ -60,30 +60,38 @@ exports.createProduct = asyncWrapper(async(req, res, next) => {
 // fetch all products
 exports.fetchAllProducts = asyncWrapper(async(req, res) => {
     let filter = {};
-    if (req.query) filter = req.query;
-     
-    let title = filter.title
-    const products = await Product.find({$or: [
-            {
-                title: {
-                    $regex: new RegExp("^" + title),
-                    $options: "i"
+    filter = req.query;
+    if (filter.title != undefined ) {
+        let title = filter.title
+            const products = await Product.find({$or: [
+                {
+                    title: {
+                        $regex: new RegExp("^" + title),
+                        $options: "i"
+                    }
+                },
+                {
+                    title: {
+                        $regex: new RegExp(title + "$"),
+                        $options: "i"
+                    }
                 }
-            },
-            {
-                title: {
-                    $regex: new RegExp(title + "$"),
-                    $options: "i"
-                }
-            }
-        ]
-    })
-     
-    res.status(200).json({
-        status: 'success',
-        message: 'Products fetched successfully',
-        products,
-    });
+            ]
+        })
+        res.status(200).json({
+            status: 'success',
+            message: 'Products fetched successfully',
+            products,
+        });
+    } else {
+        const products = await Product.find(filter)
+        console.log(products)
+        res.status(200).json({
+            status: 'success',
+            message: 'Products fetched successfully',
+            products: products
+        });
+    }
 })
 
 // fetch single product
@@ -104,7 +112,7 @@ exports.fetchProduct = asyncWrapper(async (req, res, next) => {
 exports.editProduct = asyncWrapper(async (req, res) => {
     const id = req.params.id;
     const oldProduct = await Product.findOne({ _id: id })
-    
+    console.log(id)
     
     let newProduct = await {
         title: req.body.title,
@@ -116,7 +124,7 @@ exports.editProduct = asyncWrapper(async (req, res) => {
     if (req.file) {
         // delete old image
         const imagePath =  oldProduct.productImage.storagePath;
-        fs.unlinkSync(path.join(imagePath));
+        //fs.unlinkSync(path.join(imagePath));
              
             newProduct.productImage = {
                 storagePath: req.file.path,
@@ -136,13 +144,10 @@ exports.editProduct = asyncWrapper(async (req, res) => {
 // delete product
 exports.deleteProduct = asyncWrapper(async(req, res) => {
     // delete product image from server
-    console.log(req.params.id)
-    const product = await Product.findOne({ _id: req.params.id })
-    console.log("here")
+    const product = await Product.findOne({ _id: req.params.id })   
     const imagePath =  product.productImage.storagePath;
-    console.log("here1")
-    fs.unlinkSync(path.join(imagePath));
-    console.log("her2")
+    //fs.unlinkSync(path.join(imagePath));
+   
     // delete from db
     const deleted = await Product.deleteOne({ _id: req.params.id })
     if (!deleted) res.status(400).json({

@@ -40,7 +40,6 @@ exports.verifyPayment = (req,res) => {
         }
 
         response = JSON.parse(body);
-        console.log(response)
         const data = _.at(response.data, [
             'reference', 
             'amount',
