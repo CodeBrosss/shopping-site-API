@@ -18,6 +18,7 @@ const path = require('path')
 const fs = require('fs')
 
 const asyncWrapper = require('../utils/catchAsync')
+const { cloudinary } = require('../cloudinary')
 
 // get all users
 exports.fetchAllUsers = asyncWrapper(async (req, res, next) => {
@@ -147,7 +148,6 @@ exports.adminSignup = asyncWrapper(async (req, res, next) => {
       newAdmin
     })
   } catch (error) {
-
     res.status(500).json({
       message: 'Internal server error',
       error: error
@@ -249,9 +249,18 @@ exports.editUser = asyncWrapper(async (req, res, next) => {
 })
 
 exports.editAdmin = asyncWrapper(async (req, res) => {
+  // console.log(req.body)
   const id = req.user.id
   const oldAdmin = await Admin.findOne({ _id: id })
 
+  let newString
+  if (oldAdmin.photo) {
+    const url = oldAdmin.photo.storagePath
+    let extractedString = url.split('image/upload/v')[1].split('.jpg')[0]
+    let parts = extractedString.split('/')
+    parts.shift()
+    newString = parts.join('/')
+  }
   let newAdmin = await {
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -259,9 +268,16 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
   }
 
   if (req.file) {
+<<<<<<< HEAD
     // delete old image
     const imagePath = oldAdmin.photo.storagePath
     //fs.unlinkSync(path.join(imagePath))
+=======
+    cloudinary.uploader.destroy(newString, (error, result) => {
+      error && console.error(error)
+      result && cosole.log({ result })
+    })
+>>>>>>> 356440cd11fb1cc845272cf0638e20dfeb4b24ae
 
     newAdmin.photo = await {
       storagePath: req.file.path,
@@ -281,6 +297,7 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
 
 exports.changeUserPassword = asyncWrapper(async (req, res, next) => {
   // validate req body
+
   const { error } = validatePasswordChange(req.body)
   if (error) return next(new AppError(error.message, 400))
 
@@ -330,8 +347,7 @@ exports.changeAdminPassword = asyncWrapper(async (req, res, next) => {
   const passwordUpdate = await {
     password: newHashedPassword
   }
-
-  const update = await Admin.findOneAndUpdate({ _id: id }, passwordUpdate, {
+  await Admin.findOneAndUpdate({ _id: id }, passwordUpdate, {
     new: true
   })
 

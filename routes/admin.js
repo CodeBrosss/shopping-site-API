@@ -9,7 +9,9 @@ const {
   grantAccess,
   editAdmin
 } = require('../controllers/auth.controller')
+
 const { upload } = require('../middlewares/cloudinary')
+
 
 router.route('/signup').post(upload.single('picture'), adminSignup)
 router.route('/signin').post(adminSignIn)
