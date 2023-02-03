@@ -4,7 +4,7 @@ const AppError = require('../utils/appError')
 const Favourite = require('../models/favourite')
 const ProductLike = require('../models/likes')
 const User = require('../models/user')
-const { cloudinary } = require("../cloudinary/index")
+const { cloudinaryDelete } = require('../cloudinary/index');
 
 const asyncWrapper = require('../utils/catchAsync')
 
@@ -104,28 +104,8 @@ exports.editProduct = asyncWrapper(async (req, res) => {
     category: req.body.category
   }
 
-  let newString
-  if (oldProduct.productImage) {
-    const url = oldProduct.productImage.storagePath
-    let extractedString = url.split('/')
-    let fileNameArray = new Array(extractedString[7], extractedString[8])
-    let fileNameFormat = fileNameArray.join('/')
-    newString = fileNameFormat.split('.')[0]
-  }
-
   if (req.file) {
-    // delete old image
-    cloudinary.uploader.destroy(newString, (error, result) => {
-      if (error) {
-        if (error.code == 'ENOTFOUND') {
-          cloudinary.uploader.destroy(req.file.filename)
-          res.send({message: "Experiencing connection problems, couldn't update image"})
-        }
-        console.log(error)
-      }
-      result && console.log({ result })
-    })
-
+    if (oldProduct.productImage) cloudinaryDelete(oldProduct.productImage.storagePath, req.file)
     newProduct.productImage = {
       storagePath: req.file.path,
       contentType: req.file.mimetype
@@ -149,21 +129,7 @@ exports.deleteProduct = asyncWrapper(async (req, res) => {
   const imagePath = product.productImage.storagePath
    
   // Delete product image from cloudinary
-  if (imagePath) {
-    let extractedString = imagePath.split('/')
-    let fileNameArray = new Array(extractedString[7], extractedString[8])
-    let fileNameFormat = fileNameArray.join('/')
-    newString = fileNameFormat.split('.')[0]
-    cloudinary.uploader.destroy(newString, (error, result) => {
-      if (error) {
-        if (error.code == 'ENOTFOUND') {
-          res.send({message: "Experiencing connection problems, couldn't delete image"})
-        }
-        console.log(error)
-      }
-      result && console.log({ result })
-    })
-  }
+  if (imagePath) cloudinaryDelete(imagePath)
 
   // delete product from db
   const deleted = await Product.deleteOne({ _id: req.params.id })

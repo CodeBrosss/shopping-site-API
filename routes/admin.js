@@ -5,6 +5,7 @@ const {
   adminSignIn,
   changeAdminPassword,
   deleteUser,
+  deleteAdmin,
   getHeaderToken,
   checkIfLoggedIn,
   grantAccess,
@@ -41,5 +42,12 @@ router
     grantAccess("deleteAny", "account"),
     deleteUser
 )  
+
+  router.route("/delete").delete(
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess("deleteOwn", "account"),
+    deleteAdmin
+  )
 
 module.exports = router

@@ -16,7 +16,7 @@ const { roles } = require('../roles')
 require('dotenv').config()
 
 const asyncWrapper = require('../utils/catchAsync')
-const { cloudinary } = require('../cloudinary/index');
+const { cloudinaryDelete } = require('../cloudinary/index');
 
 // get all users
 exports.fetchAllUsers = asyncWrapper(async (req, res, next) => {
@@ -248,7 +248,7 @@ exports.editUser = asyncWrapper(async (req, res, next) => {
 
 exports.editAdmin = asyncWrapper(async (req, res) => {
   // console.log(req.body)
-  const id = req.user.id
+  const id = req.user._id
   const oldAdmin = await Admin.findOne({ _id: id })
 
   let newAdmin = await {
@@ -257,34 +257,14 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
     email: req.body.email
   }
 
-
-  let newString
-  if (oldAdmin.photo) {
-    const url = oldAdmin.photo.storagePath
-    let extractedString = url.split('/')
-    let fileNameArray = new Array(extractedString[7], extractedString[8])
-    let fileNameFormat = fileNameArray.join('/')
-    newString = fileNameFormat.split('.')[0]
-  }
-   
   if (req.file) {
-    cloudinary.uploader.destroy(newString, (error, result) => {
-      if (error) {
-        if (error.code == 'ENOTFOUND') {
-          cloudinary.uploader.destroy(req.file.filename)
-          res.send({message: "Experiencing connection problems, couldn't update image"})
-        }
-        console.log(error)
-      }
-      result && console.log({ result })
-    })
-
+    if (oldAdmin.photo) cloudinaryDelete(oldAdmin.photo.storagePath, req.file)
     newAdmin.photo = await {
       storagePath: req.file.path,
       contentType: req.file.mimetype
     }
   }
-
+  
   let update = await Admin.findOneAndUpdate({ _id: id }, newAdmin, {
     new: true
   })
@@ -440,6 +420,36 @@ exports.deleteUser = asyncWrapper(async (req, res) => {
   }
 
   const deleted = await User.deleteOne({ _id: id })
+  if (!deleted) {
+    res.status(400).json({
+      status: "Failed",
+      message: "Failed to delete account."
+    })
+  }
+
+  res.status(200).json({
+    status: "Success",
+    message: "Account deleted."
+  })
+})
+
+exports.deleteAdmin = asyncWrapper(async (req, res) => {
+  const admin = await Admin.findOne({ _id: req.user._id })
+
+  if (admin.photo) cloudinaryDelete(admin.photo.storagePath)
+
+  const adminFavourites = admin.favourites;
+  if (adminFavourites[0]) {
+    adminFavourites.forEach(favourite => {
+      Favourite.deleteOne({ _id: favourite })
+        .then((err, result) => {
+          if (err) console.log(err)
+          console.log(result)
+        })
+    })
+  }
+
+  const deleted = await Admin.deleteOne({ _id: req.user._id })
   if (!deleted) {
     res.status(400).json({
       status: "Failed",
