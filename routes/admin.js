@@ -4,10 +4,11 @@ const {
   adminSignup,
   adminSignIn,
   changeAdminPassword,
+  deleteUser,
   getHeaderToken,
   checkIfLoggedIn,
   grantAccess,
-  editAdmin
+  editAdmin,
 } = require('../controllers/auth.controller')
 
 const { upload } = require('../middlewares/cloudinary')
@@ -33,5 +34,12 @@ router
     upload.single('picture'),
     editAdmin
   )
+
+  router.route("/:userId/delete").delete(
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess("deleteAny", "account"),
+    deleteUser
+)  
 
 module.exports = router

@@ -2,6 +2,7 @@
 
 const User = require('../models/user')
 const Admin = require('../models/admin')
+const Favourite = require('../models/favourite')
 const jwt = require('jsonwebtoken')
 const { hashPassword, comparePassword } = require('../utils/bcrypt')
 const AppError = require('../utils/appError')
@@ -417,3 +418,37 @@ exports.getHeaderToken = async (req, res, next) => {
     }
   }
 }
+
+exports.deleteUser = asyncWrapper(async (req, res) => {
+  let id
+  if (req.params.userId) {
+    id = req.params.userId
+  } else {
+    id = req.user._id
+  }
+  console.log(id)
+  const user = await User.findOne({ _id: id })
+  const userFavourites = user.favourites;
+  if (userFavourites[0]) {
+    userFavourites.forEach(favourite => {
+      Favourite.deleteOne({ _id: favourite })
+        .then((err, result) => {
+          if (err) console.log(err)
+          console.log(result)
+        })
+    })
+  }
+
+  const deleted = await User.deleteOne({ _id: id })
+  if (!deleted) {
+    res.status(400).json({
+      status: "Failed",
+      message: "Failed to delete account."
+    })
+  }
+
+  res.status(200).json({
+    status: "Success",
+    message: "Account deleted."
+  })
+})
