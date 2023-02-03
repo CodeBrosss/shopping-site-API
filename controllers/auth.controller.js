@@ -5,7 +5,6 @@ const Admin = require('../models/admin')
 const jwt = require('jsonwebtoken')
 const { hashPassword, comparePassword } = require('../utils/bcrypt')
 const AppError = require('../utils/appError')
-// const catchAsync = require('../utils/catchAsync').default.default;
 const {
   validateSignUp,
   validateLogin,
@@ -14,11 +13,9 @@ const {
 } = require('../validations/user.validation')
 const { roles } = require('../roles')
 require('dotenv').config()
-const path = require('path')
-const fs = require('fs')
 
 const asyncWrapper = require('../utils/catchAsync')
-const { cloudinary } = require('../cloudinary')
+const { cloudinary } = require('../cloudinary/index');
 
 // get all users
 exports.fetchAllUsers = asyncWrapper(async (req, res, next) => {
@@ -253,31 +250,33 @@ exports.editAdmin = asyncWrapper(async (req, res) => {
   const id = req.user.id
   const oldAdmin = await Admin.findOne({ _id: id })
 
-  let newString
-  if (oldAdmin.photo) {
-    const url = oldAdmin.photo.storagePath
-    let extractedString = url.split('image/upload/v')[1].split('.jpg')[0]
-    let parts = extractedString.split('/')
-    parts.shift()
-    newString = parts.join('/')
-  }
   let newAdmin = await {
     firstName: req.body.firstName,
     lastName: req.body.lastName,
     email: req.body.email
   }
 
+
+  let newString
+  if (oldAdmin.photo) {
+    const url = oldAdmin.photo.storagePath
+    let extractedString = url.split('/')
+    let fileNameArray = new Array(extractedString[7], extractedString[8])
+    let fileNameFormat = fileNameArray.join('/')
+    newString = fileNameFormat.split('.')[0]
+  }
+   
   if (req.file) {
-<<<<<<< HEAD
-    // delete old image
-    const imagePath = oldAdmin.photo.storagePath
-    //fs.unlinkSync(path.join(imagePath))
-=======
     cloudinary.uploader.destroy(newString, (error, result) => {
-      error && console.error(error)
-      result && cosole.log({ result })
+      if (error) {
+        if (error.code == 'ENOTFOUND') {
+          cloudinary.uploader.destroy(req.file.filename)
+          res.send({message: "Experiencing connection problems, couldn't update image"})
+        }
+        console.log(error)
+      }
+      result && console.log({ result })
     })
->>>>>>> 356440cd11fb1cc845272cf0638e20dfeb4b24ae
 
     newAdmin.photo = await {
       storagePath: req.file.path,
@@ -366,7 +365,7 @@ exports.grantAccess = (action, resource) => {
           error: "You don't have enough permissions to perform this action"
         })
       }
-      console.log(req.user)
+      //console.log(req.user)
       next()
     } catch (error) {
       next(error)

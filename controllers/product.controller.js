@@ -1,13 +1,10 @@
 const Product = require('../models/product')
 const { validateProduct } = require('../validations/product.validation')
 const AppError = require('../utils/appError')
-// const catchAsync = require("../utils/catchAsync").default.default;
-const fs = require('fs')
-const path = require('path')
-//const { uploadFile } = require('../config/googleDrive');
 const Favourite = require('../models/favourite')
 const ProductLike = require('../models/likes')
 const User = require('../models/user')
+const { cloudinary } = require("../cloudinary/index")
 
 const asyncWrapper = require('../utils/catchAsync')
 
@@ -27,8 +24,6 @@ exports.createProduct = asyncWrapper(async (req, res, next) => {
       message: 'Product with this title already exists'
     })
   }
-  // upload file to google drive
-  //await uploadFile(req.file);
 
   // save new product req to db
   const newProduct = await Product.create({
@@ -112,17 +107,23 @@ exports.editProduct = asyncWrapper(async (req, res) => {
   let newString
   if (oldProduct.productImage) {
     const url = oldProduct.productImage.storagePath
-    let extractedString = url.split('image/upload/v')[1].split('.jpg')[0]
-    let parts = extractedString.split('/')
-    parts.shift()
-    newString = parts.join('/')
+    let extractedString = url.split('/')
+    let fileNameArray = new Array(extractedString[7], extractedString[8])
+    let fileNameFormat = fileNameArray.join('/')
+    newString = fileNameFormat.split('.')[0]
   }
 
   if (req.file) {
     // delete old image
     cloudinary.uploader.destroy(newString, (error, result) => {
-      error && console.error(error)
-      result && cosole.log({ result })
+      if (error) {
+        if (error.code == 'ENOTFOUND') {
+          cloudinary.uploader.destroy(req.file.filename)
+          res.send({message: "Experiencing connection problems, couldn't update image"})
+        }
+        console.log(error)
+      }
+      result && console.log({ result })
     })
 
     newProduct.productImage = {
@@ -149,13 +150,18 @@ exports.deleteProduct = asyncWrapper(async (req, res) => {
    
   // Delete product image from cloudinary
   if (imagePath) {
-    let extractedString = imagePath.split('image/upload/v')[1].split('.jpg')[0]
-    let parts = extractedString.split('/')
-    parts.shift()
-    const newString = parts.join('/')
+    let extractedString = imagePath.split('/')
+    let fileNameArray = new Array(extractedString[7], extractedString[8])
+    let fileNameFormat = fileNameArray.join('/')
+    newString = fileNameFormat.split('.')[0]
     cloudinary.uploader.destroy(newString, (error, result) => {
-      error && console.error(error)
-      result && cosole.log({ result })
+      if (error) {
+        if (error.code == 'ENOTFOUND') {
+          res.send({message: "Experiencing connection problems, couldn't delete image"})
+        }
+        console.log(error)
+      }
+      result && console.log({ result })
     })
   }
 
