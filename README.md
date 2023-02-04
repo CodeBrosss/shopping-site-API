@@ -1,5 +1,6 @@
 # shopping-site-API
 An API for an e-commerce website. Complete with authentication, authorization and access control
+Read documentation [here](https://docs.google.com/document/d/1QQ4SvOgUYSjFfYY-iZz7_7BaGae908HDgzVSrc7yIxw/edit?usp=sharing)
 
 - Clone the repo.
 - input environment variables for `MONGO_URI`, `PORT`, `JWT_SECRET`, `REFRESH_TOKEN`.
