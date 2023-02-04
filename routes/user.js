@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const {
+    deleteUser,
     getHeaderToken,
     checkIfLoggedIn,
-    grantAccess
+    grantAccess,
 } = require("../controllers/auth.controller");
 
 const { 
@@ -12,11 +13,18 @@ const {
 } = require("../controllers/product.controller");
 
 
-router.route("/:userId/favourites").get(
+router.route("/favourites").get(
     getHeaderToken,
     checkIfLoggedIn,
     grantAccess("readOwn", "favourite"),
     fetchFavourites
 );    
+
+router.route("/account/delete").delete(
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess("deleteOwn", "account"),
+    deleteUser
+)
 
 module.exports = router;

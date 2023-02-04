@@ -14,16 +14,18 @@ const paystackSchema = new Schema({
     email: {
         type: String,
         required: true,
-        unique: true,
     },
     fullName: {
         type: String,
         required: true,
     },
-    productId: {
-        type: Schema.Types.ObjectId,
-        ref: "Product"
-    },
+    products: [{
+        productId: {
+            type: Schema.Types.ObjectId,
+            ref: "Product"
+        },
+        quantity: Number
+    }],
     deliveryLocation: String
 })
 

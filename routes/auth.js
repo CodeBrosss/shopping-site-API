@@ -4,6 +4,7 @@ const {
     signUp, 
     signIn,
     fetchAllUsers,
+    fetchUser,
     editUser,
     changeUserPassword,
     getHeaderToken,
@@ -12,11 +13,18 @@ const {
 } = require("../controllers/auth.controller");
 
 
-router.route("/").get(
+router.route("/users").get(
     getHeaderToken,
     checkIfLoggedIn,
     grantAccess("readAny", "profile"),
     fetchAllUsers
+);
+
+router.route("/user/:id").get(
+    getHeaderToken,
+    checkIfLoggedIn,
+    grantAccess("readAny", "profile"),
+    fetchUser
 );
 
 
@@ -29,7 +37,7 @@ router.route("/user/edit").put(
     editUser
     );
 
-router.route("/:userId/password/edit").put(
+router.route("/password/edit").put(
     getHeaderToken,
     checkIfLoggedIn,
     grantAccess("updateOwn", "password"),

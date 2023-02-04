@@ -15,9 +15,26 @@ const storage = new CloudinaryStorage({
   }
 })
 
+const cloudinaryDelete = (url, file) => {
+    let extractedString = url.split('/')
+    let fileNameArray = new Array(extractedString[7], extractedString[8])
+    let fileNameFormat = fileNameArray.join('/')
+    let newString = fileNameFormat.split('.')[0]
 
+    return cloudinary.uploader.destroy(newString, (error, result) => {
+      if (error) {
+        if (error.errno == -3001 && file) {
+          cloudinary.uploader.destroy(req.file.filename)
+          res.send({message: "Experiencing connection problems, couldn't update image"})
+        }
+        console.log(error)
+      }
+      result && console.log({ result })
+    })
+}
 
 module.exports = {
   cloudinary,
-  storage
+  storage,
+  cloudinaryDelete
 }

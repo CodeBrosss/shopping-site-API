@@ -10,6 +10,7 @@ ac.grant("basic")
  .createOwn("like")
  .updateOwn("password")
  .updateOwn("profile")
+ .deleteOwn("account")
 
 ac.grant("admin")
  .extend("basic")
@@ -17,6 +18,7 @@ ac.grant("admin")
  .updateAny("product")
  .deleteAny("product")
  .readAny("profile")
+ .deleteAny("account")
 
   return ac; 
 })();

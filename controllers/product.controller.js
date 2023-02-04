@@ -1,13 +1,10 @@
 const Product = require('../models/product')
 const { validateProduct } = require('../validations/product.validation')
 const AppError = require('../utils/appError')
-// const catchAsync = require("../utils/catchAsync").default.default;
-const fs = require('fs')
-const path = require('path')
-//const { uploadFile } = require('../config/googleDrive');
 const Favourite = require('../models/favourite')
 const ProductLike = require('../models/likes')
 const User = require('../models/user')
+const { cloudinaryDelete } = require('../cloudinary/index');
 
 const asyncWrapper = require('../utils/catchAsync')
 
@@ -27,8 +24,6 @@ exports.createProduct = asyncWrapper(async (req, res, next) => {
       message: 'Product with this title already exists'
     })
   }
-  // upload file to google drive
-  //await uploadFile(req.file);
 
   // save new product req to db
   const newProduct = await Product.create({
@@ -49,33 +44,40 @@ exports.createProduct = asyncWrapper(async (req, res, next) => {
 })
 
 // fetch all products
-exports.fetchAllProducts = asyncWrapper(async (req, res) => {
-  let filter = {}
-  if (req.query) filter = req.query
-
-  let title = filter.title
-  const products = await Product.find({
-    $or: [
-      {
-        title: {
-          $regex: new RegExp('^' + title),
-          $options: 'i'
-        }
-      },
-      {
-        title: {
-          $regex: new RegExp(title + '$'),
-          $options: 'i'
-        }
-      }
-    ]
-  })
-
-  res.status(200).json({
-    status: 'success',
-    message: 'Products fetched successfully',
-    products
-  })
+exports.fetchAllProducts = asyncWrapper(async(req, res) => {
+    let filter = {};
+    filter = req.query;
+    if (filter.title != undefined ) {
+        let title = filter.title
+            const products = await Product.find({$or: [
+                {
+                    title: {
+                        $regex: new RegExp("^" + title),
+                        $options: "i"
+                    }
+                },
+                {
+                    title: {
+                        $regex: new RegExp(title + "$"),
+                        $options: "i"
+                    }
+                }
+            ]
+        })
+        res.status(200).json({
+            status: 'success',
+            message: 'Products fetched successfully',
+            products,
+        });
+    } else {
+        const products = await Product.find(filter)
+        console.log(products)
+        res.status(200).json({
+            status: 'success',
+            message: 'Products fetched successfully',
+            products: products
+        });
+    }
 })
 
 // fetch single product
@@ -102,22 +104,8 @@ exports.editProduct = asyncWrapper(async (req, res) => {
     category: req.body.category
   }
 
-  let newString
-  if (oldProduct.productImage) {
-    const url = oldProduct.productImage.storagePath
-    let extractedString = url.split('image/upload/v')[1].split('.jpg')[0]
-    let parts = extractedString.split('/')
-    parts.shift()
-    newString = parts.join('/')
-  }
-
   if (req.file) {
-    // delete old image
-    cloudinary.uploader.destroy(newString, (error, result) => {
-      error && console.error(error)
-      result && cosole.log({ result })
-    })
-
+    if (oldProduct.productImage) cloudinaryDelete(oldProduct.productImage.storagePath, req.file)
     newProduct.productImage = {
       storagePath: req.file.path,
       contentType: req.file.mimetype
@@ -137,14 +125,13 @@ exports.editProduct = asyncWrapper(async (req, res) => {
 // delete product
 exports.deleteProduct = asyncWrapper(async (req, res) => {
   // delete product image from server
-  console.log(req.params.id)
   const product = await Product.findOne({ _id: req.params.id })
-  console.log('here')
   const imagePath = product.productImage.storagePath
-  console.log('here1')
-  fs.unlinkSync(path.join(imagePath))
-  console.log('her2')
-  // delete from db
+   
+  // Delete product image from cloudinary
+  if (imagePath) cloudinaryDelete(imagePath)
+
+  // delete product from db
   const deleted = await Product.deleteOne({ _id: req.params.id })
   if (!deleted)
     res.status(400).json({
