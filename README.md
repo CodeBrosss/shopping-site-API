@@ -6,6 +6,7 @@ API is hosted live [here](http://e-shop-tk9t.onrender.com/api/v1/)
 
 ## How to set up locally. 
 - Clone the repo.
+- Run `npm install` to install dependencies.
 - input environment variables for `MONGO_URI`, `PORT`, `JWT_SECRET`, `REFRESH_TOKEN`, `PAYSTACK_SECRET_KEY`,
   `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_KEY`, `CLOUDINARY_SECRET`.
 - enter `npm run devStart` in the terminal to start up the development server.
